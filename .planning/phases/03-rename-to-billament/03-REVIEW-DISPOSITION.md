@@ -5,23 +5,28 @@ titles: json
 findings:
   - id: WR-01
     severity: warning
-    disposition: open
+    disposition: fixed
+    source: "commit ba15e24"
     title: "SQLite sidecar files are not part of the database rename, and a hot journal blocks start-up with a misleading message"
   - id: WR-02
     severity: warning
-    disposition: open
+    disposition: fixed
+    source: "commit 8bb3b28"
     title: "publish.ps1 deletes the old install folder recursively with no containment or link guard"
   - id: WR-03
     severity: warning
-    disposition: open
+    disposition: fixed
+    source: "commit 3e2c4ce"
     title: "The folder-settings rewrite is skipped when the folder moved but the database file was not renamed"
   - id: WR-04
     severity: warning
-    disposition: open
+    disposition: fixed
+    source: "commit 0c6e87d"
     title: "The start-up failure message can say \"nothing was changed\" when the move already changed things"
   - id: WR-05
     severity: warning
-    disposition: open
+    disposition: fixed
+    source: "commit 0d43bfc"
     title: "Empty special folders turn the migration into a working-directory-relative rename"
   - id: IN-01
     severity: info
@@ -43,7 +48,7 @@ findings:
     severity: info
     disposition: open
     title: "Wording and naming leftovers"
-open: 10
+open: 5
 total: 10
 recorded: 2026-11-02T05:30:11.778Z
 ---
@@ -52,11 +57,11 @@ recorded: 2026-11-02T05:30:11.778Z
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | open | - |
-| WR-02 | warning | open | - |
-| WR-03 | warning | open | - |
-| WR-04 | warning | open | - |
-| WR-05 | warning | open | - |
+| WR-01 | warning | fixed | commit ba15e24 |
+| WR-02 | warning | fixed | commit 8bb3b28 |
+| WR-03 | warning | fixed | commit 3e2c4ce |
+| WR-04 | warning | fixed | commit 0c6e87d |
+| WR-05 | warning | fixed | commit 0d43bfc |
 | IN-01 | info | open | - |
 | IN-02 | info | open | - |
 | IN-03 | info | open | - |
