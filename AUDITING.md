@@ -31,6 +31,10 @@ address. It reads at most 256 KB of the reply (`LatestReleaseReply.MaxBytes`); a
 no update information. There is no telemetry, analytics or crash upload. Error details are saved locally and never sent
 (see below).
 
+Copies of 3.7.0 and older ask the same question at the old address,
+`https://api.github.com/repos/cevans3505/PrintInvoicer/releases/latest`; GitHub redirects it to this repository, which
+was renamed in 4.0.0.
+
 ## Programs started
 
 All of these use Windows' "open this with its default program" (`Process.Start` with `UseShellExecute`). Each one happens
@@ -52,7 +56,7 @@ quote or a space stays one argument.
 | Location | What | Where in the code |
 | --- | --- | --- |
 | `Documents\Billament\billament.db` | All jobs, materials, printers and settings (SQLite) | `Database` (`Open`, used by every read and write) |
-| `Documents\Billament\Backups\` (or the folder set in Settings) | Daily and manual copies of the database; oldest daily copies deleted to keep 14; each copy is first written to its own uniquely named `.partial` file and then moved into place; a copy that fails deletes its own `.partial` file and no other (one left by a copy that was cut off, for example by a power cut, stays until you delete it) | `DatabaseBackup` |
+| `Documents\Billament\Backups\` (or the folder set in Settings) | Daily and manual copies of the database, named `billament-...`; copies made before 4.0 are named `printinvoicer-...` and are listed, restored and pruned the same way; the oldest daily copies, by the date in their names, are deleted to keep 14; each copy is first written to its own uniquely named `.partial` file and then moved into place; a copy that fails deletes its own `.partial` file and no other (one left by a copy that was cut off, for example by a power cut, stays until you delete it) | `DatabaseBackup` |
 | `Documents\Billament\Invoices\` (or the folder set in Settings) | Invoice and detail-sheet PDFs. Their names come from the invoice number and job title, cleaned and length-limited by `SafeFileName`, so a PDF is always saved directly in this folder | `InvoicePdf.Write` |
 | `%TEMP%\Billament previews\` | Preview PDFs (names cleaned the same way) | `InvoicePdf.Write` |
 | `%LOCALAPPDATA%\Billament\update-check.json` | When GitHub was last asked, and the newest release it reported | `UpdateService.SaveState` |
@@ -123,7 +127,12 @@ Plus .NET 10 and WPF from Microsoft. The test projects use xUnit; tests are not 
 These run on a developer's PC or on GitHub, never on users' machines:
 
 - **`publish.ps1`** runs the tests and builds the program. It then installs it to `%LOCALAPPDATA%\Programs\Billament`
-  with a Start menu shortcut, and refreshes Windows' icon cache (`ie4uinit.exe -show`).
+  with a Start menu shortcut, and refreshes Windows' icon cache (`ie4uinit.exe -show`). After a successful install it
+  removes the old PrintInvoicer install from before 4.0: the Start menu shortcut `PrintInvoicer.lnk`, only when it
+  points at `PrintInvoicer.exe`, and the folder `%LOCALAPPDATA%\Programs\PrintInvoicer`, only when it holds
+  `PrintInvoicer.exe`, no `.db` file and no `Backups` or `Invoices` folder, and is not the new install folder. It never
+  touches the data folders. These checks and deletes are tagged `# AUDIT:` in the script (two file reads and two file
+  deletes), outside the `src` count above.
 - **`make-readme-images.ps1`** rebuilds the three README pictures. It starts `dotnet test` for one screen test
   (`ReadmeImageTests`), which runs offscreen, creates the folders if needed and writes PNG files to `docs/images` in the
   repository and to the test's own `bin` folder. The script then reads each picture's last-write time to check it was

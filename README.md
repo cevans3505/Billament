@@ -100,7 +100,8 @@ From Windows PowerShell, with Billament closed:
 ```
 
 This runs the tests, builds a self-contained `Billament.exe` (no .NET install needed to run it), copies it to
-`%LOCALAPPDATA%\Programs\Billament` and adds a **Billament** Start menu shortcut.
+`%LOCALAPPDATA%\Programs\Billament` and adds a **Billament** Start menu shortcut. It also removes the Start menu
+shortcut and program folder of an old PrintInvoicer install, never its data.
 
 Building needs the .NET 10 SDK (`winget install Microsoft.DotNet.SDK.10`).
 

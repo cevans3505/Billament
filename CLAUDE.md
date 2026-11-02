@@ -36,5 +36,9 @@ Public, MIT, shared as-is. User docs: `README.md`. Security map: `AUDITING.md`.
   `WpfHost` in the UI tests.
 - **No personal data** in code, tests or docs: sample names like "Harbor Dive Shop", "Sample Printing Co.".
 - **Writing style** in docs, comments and messages: plain English, no em dashes.
+- **Old name:** the app was called PrintInvoicer before 4.0.0. The old name stays on purpose only in the one-time data
+  move (`DataFolderMigration` and its tests), old backup names (`DatabaseBackup.LegacyPrefix`, the restore picker
+  filter, `BackupTests`), the old-install cleanup in `publish.ps1`, the remark on `UpdateService.Repository`, and the
+  rename notes in README, `Read me.txt`, AUDITING.md and the release notes. Do not rename those.
 - File readers treat every file as untrusted: range-check values, cap sizes, throw `InvalidDataException` with a
   user-readable message, never anything else.
