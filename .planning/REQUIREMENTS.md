@@ -1,4 +1,4 @@
-# Requirements: PrintInvoicer
+# Requirements: Billament
 
 **Defined:** 2026-11-01
 **Core Value:** Prices and invoices stay correct and trustworthy: a finalized invoice never changes, and totals match what the slice file and price book say.
