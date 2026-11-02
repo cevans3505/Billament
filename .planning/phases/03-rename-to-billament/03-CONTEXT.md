@@ -122,6 +122,22 @@ All decisions below were given by the user before discussion and are locked.
   4.0.0 release (push `main`, wait for CI, push tag `v4.0.0`, check the draft's zip and `.sha256`, write notes,
   publish), and confirm a 3.7.0 install shows the update bar.
 
+### Answers to the planning open questions (user, 2026-11-02)
+- **D-22:** If the Documents move fails: a plain message naming the old folder, then Billament exits without creating
+  the new folder (the plan's default, confirmed).
+- **D-23:** If the `%LOCALAPPDATA%` move fails: say nothing; window sizes, update-check state and saved error details
+  start fresh (confirmed).
+- **D-24:** If an unrelated `Documents\Billament` already exists: nothing is moved and a one-time notice says where the
+  old data is (confirmed).
+- **D-25:** **Restoring a pre-4.0 backup is fixed in this phase, not left to Phase 4 FIX-09.** Right after a successful
+  restore, Billament applies the same two-key folder rewrite as the first-start move, so a `BackupFolder` or
+  `InvoiceFolder` inside `Documents\PrintInvoicer` points at the same place under `Documents\Billament`. This
+  overturns RESEARCH Open Question 4 and 03-04 decision (d) as first planned; plans 03-03, 03-04 and 03-05 are updated.
+- **D-26:** Old 3.7.0 exe started after the move: the docs warning plus `publish.ps1` removing the old install and
+  shortcut is enough (confirmed). No marker file in the old folder.
+- Running copy (open question 6): unchanged; if the Windows test shows a running 3.7.0 does not block the move, the
+  plan stops before release for a decision.
+
 ### Claude's Discretion
 - Where the pre-move backup goes and its exact name (for example a `pre-rename` manual backup made with
   `DatabaseBackup.Manual` into the old Backups folder so it moves along with the data, or a copy left beside the old
