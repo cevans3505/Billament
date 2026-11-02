@@ -15,6 +15,12 @@ public partial class App : Application
     /// <summary>The open database, shared by every window.</summary>
     public static Database Db { get; internal set; } = null!;
 
+    /// <summary>
+    /// False in the screen tests. WPF runs <see cref="OnStartup"/> for any App made on a thread whose dispatcher runs,
+    /// not only through Run, and start-up moves the old data folders, opens the real database and shows the window.
+    /// </summary>
+    internal static bool RunStartup { get; set; } = true;
+
     /// <summary>Why the last automatic backup failed, if it did; shown on the Settings tab.</summary>
     public static string? BackupProblem { get; set; }
 
@@ -42,6 +48,7 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        if (!RunStartup) return;
         QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
         EventManager.RegisterClassHandler(typeof(TextBox), FrameworkElement.LoadedEvent, new RoutedEventHandler(HideClearButton));
 

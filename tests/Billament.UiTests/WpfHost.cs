@@ -38,6 +38,8 @@ internal static class WpfHost
         {
             try
             {
+                // Creating the App queues its real start-up (data move, real database, main window); skip it.
+                App.App.RunStartup = false;
                 var app = new App.App { ShutdownMode = ShutdownMode.OnExplicitShutdown };
                 app.InitializeComponent();
                 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
