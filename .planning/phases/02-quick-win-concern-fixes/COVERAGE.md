@@ -1,0 +1,1 @@
+No external API integration: Phase 2 only caps the read of the one existing GitHub release reply (same GET, same address); the rest is checksums, file-name, backup and Explorer hardening, docs and tests.

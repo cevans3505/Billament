@@ -50,7 +50,17 @@ Plans:
   3. A test opens a fixture database from before snapshots existed and shows that each finalized job gets a snapshot exactly once, with the expected totals
   4. Opening a file or folder whose path contains a quote works, and a manual backup and the startup daily backup never share the same `.partial` file
   5. An update-check response over the size cap is treated as "no update info", and invoice file and folder names built from user data containing `..`, `\`, `:` or reserved names like `CON` come out safe and length-limited, with tests
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+**Wave 1**
+- [ ] 02-01-PLAN.md - Tracer: pre-snapshot fixture database opened by Database freezes each finalized invoice once at hand-derived totals, exactly-once check, and CONCERNS-TRIAGE re-score notes (FIX-02, TRIA-01) [cloud]
+- [ ] 02-02-PLAN.md - Tracer: release.yml writes, uploads and attaches PrintInvoicer-<version>.zip.sha256 with the hash in the draft notes; README Verify a download; QuestPDF USD 1,000,000 condition in README and AUDITING.md (FIX-01, FIX-07) [cloud; first real tag run on GitHub]
+
+**Wave 2** *(blocked on Wave 1 completion: AUDITING.md)*
+- [ ] 02-03-PLAN.md - Tracer: update reply read through a 256 KB Core cap and wired into UpdateService; backup copies use their own .partial file with the missing AUDIT tag (FIX-05, FIX-04) [cloud code and tests; App compile-checked; run checks on Windows]
+
+**Wave 3** *(blocked on Wave 2 completion: AUDITING.md and the 27-tag count)*
+- [ ] 02-04-PLAN.md - Tracer: SafeFileName in Core names every invoice and preview PDF and keeps it in its folder; ShellCommands passes Explorer paths through ArgumentList (FIX-06, FIX-03) [cloud code and tests; App compile-checked; run checks on Windows]
 
 ### Phase 3: Data Safety Fixes
 **Goal**: The remaining v1 concerns (triage score 1.5) are fixed in score order, so the price freeze runs only once, a restore or a second copy of the app can't overwrite data, oversized slice archives are rejected, and database corruption is caught early.
@@ -88,6 +98,6 @@ Phases execute in numeric order: 1, 2, 3, 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. README Showcase | 2/2 | Complete    | 2026-11-01 |
-| 2. Quick-Win Concern Fixes | 0/TBD | Not started | - |
+| 2. Quick-Win Concern Fixes | 0/4 | Not started | - |
 | 3. Data Safety Fixes | 0/TBD | Not started | - |
 | 4. Slice File Submissions | 0/TBD | Not started | - |
