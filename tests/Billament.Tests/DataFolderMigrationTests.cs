@@ -430,4 +430,224 @@ public sealed class DataFolderMigrationTests : IDisposable
         Assert.True(File.Exists(NewDb));
         Assert.False(Directory.Exists(Folders.OldDocuments));
     }
+
+    // ---------------- Custom backup and invoice folders ----------------
+
+    /// <summary>Runs SQL against a database file through an unpooled connection, so nothing keeps the file open.</summary>
+    private static void Execute(string dbPath, string sql, params (string Name, object Value)[] parameters)
+    {
+        using (var c = new SqliteConnection($"Data Source={dbPath};Pooling=False"))
+        {
+            c.Open();
+            using var cmd = c.CreateCommand();
+            cmd.CommandText = sql;
+            foreach (var (name, value) in parameters) cmd.Parameters.AddWithValue(name, value);
+            cmd.ExecuteNonQuery();
+        }
+        SqliteConnection.ClearAllPools();
+    }
+
+    /// <summary>Writes setting rows straight into a database file, the way SaveSettings stores them.</summary>
+    private static void SetSettings(string dbPath, params (string Key, string Value)[] rows)
+    {
+        foreach (var (key, value) in rows)
+            Execute(dbPath, "INSERT INTO settings(key, value) VALUES ($k, $v) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                ("$k", key), ("$v", value));
+    }
+
+    /// <summary>
+    /// Every row of every table (the sqlite_ tables left out) as one line of text: the table, the row id and each value,
+    /// in table name then row id order. Two dumps are equal only when no row anywhere changed.
+    /// </summary>
+    private static List<string> Dump(string dbPath)
+    {
+        using var c = new SqliteConnection($"Data Source={dbPath};Mode=ReadOnly;Pooling=False");
+        c.Open();
+        var tables = new List<string>();
+        using (var list = c.CreateCommand())
+        {
+            list.CommandText = "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite!_%' ESCAPE '!' ORDER BY name";
+            using var names = list.ExecuteReader();
+            while (names.Read()) tables.Add(names.GetString(0));
+        }
+
+        var lines = new List<string>();
+        foreach (string table in tables)
+        {
+            using var cmd = c.CreateCommand();
+            cmd.CommandText = $"SELECT rowid, * FROM \"{table}\" ORDER BY rowid";
+            using var r = cmd.ExecuteReader();
+            while (r.Read())
+                lines.Add(table + "|" + string.Join("|", Enumerable.Range(0, r.FieldCount).Select(i =>
+                    r.IsDBNull(i) ? "<null>"
+                    : r.GetValue(i) is byte[] blob ? Convert.ToBase64String(blob)
+                    : Convert.ToString(r.GetValue(i), CultureInfo.InvariantCulture))));
+        }
+        return lines;
+    }
+
+    // Turns a path written with forward slashes into one with this system's separator.
+    private static string Native(string path) => path.Replace('/', Path.DirectorySeparatorChar);
+
+    [Theory]
+    [InlineData(DataFolders.OldName, DataFolders.NewName)]
+    [InlineData(DataFolders.OldName + "/", DataFolders.NewName)]
+    [InlineData(DataFolders.OldName + "/Invoices 2026", DataFolders.NewName + "/Invoices 2026")]
+    [InlineData(DataFolders.OldName + "/Sub/../Backups", DataFolders.NewName + "/Backups")]
+    [InlineData(DataFolders.OldName + "Old/x", null)]
+    [InlineData(DataFolders.OldName + "2026", null)]
+    [InlineData(DataFolders.OldName + "/../Other", null)]
+    [InlineData("Other/" + DataFolders.OldName + "/x", null)]
+    public void Remaps_only_paths_inside_the_old_folder(string relative, string? expectedRelative)
+    {
+        string value = Path.Combine(Docs, Native(relative));
+
+        string? result = DataFolderMigration.RemapFolder(value, Folders.OldDocuments, Folders.NewDocuments, StringComparison.Ordinal);
+
+        if (expectedRelative is null)
+            Assert.Same(value, result);   // not a folder of the old data: the very same text comes back
+        else
+            Assert.Equal(Path.Combine(Docs, Native(expectedRelative)), result);
+    }
+
+    [Fact]
+    public void Blank_and_relative_values_are_left_as_they_are()
+    {
+        foreach (string? value in new string?[] { null, "", "   ", "Invoices" })
+            Assert.Same(value, DataFolderMigration.RemapFolder(value, Folders.OldDocuments, Folders.NewDocuments, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void The_letter_case_rule_comes_from_the_caller()
+    {
+        string value = Path.Combine(Docs, DataFolders.OldName.ToUpperInvariant(), "Invoices");
+
+        Assert.Equal(Path.Combine(Folders.NewDocuments, "Invoices"),
+            DataFolderMigration.RemapFolder(value, Folders.OldDocuments, Folders.NewDocuments, StringComparison.OrdinalIgnoreCase));
+        Assert.Same(value,
+            DataFolderMigration.RemapFolder(value, Folders.OldDocuments, Folders.NewDocuments, StringComparison.Ordinal));
+
+        // The same rule reaches the settings rewrite inside Run.
+        CreateOldData();
+        SetSettings(OldDb, (nameof(AppSettings.InvoiceFolder), value));
+        DataFolderMigration.Run(Folders, Now, pathComparison: StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(Path.Combine(Folders.NewDocuments, "Invoices"), new Database(NewDb).LoadSettings().InvoiceFolder);
+    }
+
+    [Fact]
+    public void Custom_folders_inside_the_old_folder_follow_the_move()
+    {
+        CreateOldData();
+        SetSettings(OldDb,
+            (nameof(AppSettings.BackupFolder), Path.Combine(Folders.OldDocuments, "My backups")),
+            (nameof(AppSettings.InvoiceFolder), Path.Combine(Folders.OldDocuments, "Invoices 2026")));
+
+        DataFolderMigration.Run(Folders, Now, pathComparison: StringComparison.Ordinal);
+
+        var settings = new Database(NewDb).LoadSettings();
+        Assert.Equal(Path.Combine(Folders.NewDocuments, "My backups"), settings.BackupFolder);
+        Assert.Equal(Path.Combine(Folders.NewDocuments, "Invoices 2026"), settings.InvoiceFolder);
+
+        // The next backup lands in the moved folder, not in the old name's folder.
+        string? made = DatabaseBackup.DailyIfDue(NewDb, settings.BackupFolder, Now);
+        Assert.NotNull(made);
+        Assert.Equal(settings.BackupFolder, Path.GetDirectoryName(made));
+        Assert.True(File.Exists(made));
+        Assert.False(Directory.Exists(Folders.OldDocuments));
+    }
+
+    [Fact]
+    public void Folders_set_elsewhere_are_left_exactly_as_they_are()
+    {
+        CreateOldData();
+        string elsewhere = Path.Combine(_root, "elsewhere", "Backups");
+        string sibling = Path.Combine(Docs, DataFolders.OldName + "Old", "x");
+        SetSettings(OldDb, (nameof(AppSettings.BackupFolder), elsewhere), (nameof(AppSettings.InvoiceFolder), sibling));
+        var bytes = File.ReadAllBytes(OldDb);
+
+        DataFolderMigration.Run(Folders, Now, pathComparison: StringComparison.Ordinal);
+
+        var settings = new Database(NewDb).LoadSettings();
+        Assert.Equal(elsewhere, settings.BackupFolder);
+        Assert.Equal(sibling, settings.InvoiceFolder);
+        SqliteConnection.ClearAllPools();
+        Assert.Equal(bytes, File.ReadAllBytes(NewDb));   // never opened for writing
+    }
+
+    [Fact]
+    public void Only_the_two_folder_settings_change()
+    {
+        CreateOldData();
+        SetSettings(OldDb,
+            (nameof(AppSettings.BackupFolder), Path.Combine(Folders.OldDocuments, "My backups")),
+            (nameof(AppSettings.InvoiceFolder), Path.Combine(Folders.OldDocuments, "Invoices 2026")));
+        var before = Dump(OldDb);
+        var frozen = Frozen(OldDb);
+        Assert.Equal(2, frozen.Count);
+
+        DataFolderMigration.Run(Folders, Now, pathComparison: StringComparison.Ordinal);
+
+        var after = Dump(NewDb);
+        Assert.Equal(before.Count, after.Count);
+        var removed = before.Except(after).ToList();
+        var added = after.Except(before).ToList();
+        Assert.Equal(2, removed.Count);
+        Assert.Equal(2, added.Count);
+        Assert.All(removed.Concat(added), line => Assert.True(
+            line.StartsWith("settings|") && (line.Contains("|BackupFolder|") || line.Contains("|InvoiceFolder|")), line));
+        Assert.Equal(frozen, Frozen(NewDb));
+    }
+
+    [Fact]
+    public void A_settings_update_that_fails_is_a_notice()
+    {
+        CreateOldData();
+        SetSettings(OldDb, (nameof(AppSettings.BackupFolder), Path.Combine(Folders.OldDocuments, "My backups")));
+        Execute(OldDb, "CREATE TRIGGER no_update BEFORE UPDATE ON settings BEGIN SELECT RAISE(ABORT, 'read only'); END;");
+
+        var result = DataFolderMigration.Run(Folders, Now, pathComparison: StringComparison.Ordinal);
+
+        Assert.Equal(FolderMove.Moved, result.Documents);
+        Assert.False(result.DocumentsFailed);
+        Assert.Null(result.Problem);
+        Assert.NotNull(result.Notice);
+        Assert.Contains("Settings tab", result.Notice);
+        Assert.IsType<SqliteException>(result.Error);
+        Assert.True(File.Exists(NewDb));
+    }
+
+    [Fact]
+    public void A_database_without_a_settings_table_is_moved_and_left_alone()
+    {
+        CreateOldData(withDatabase: false);
+        Execute(OldDb, "CREATE TABLE stuff (x INTEGER); INSERT INTO stuff(x) VALUES (1);");
+        var bytes = File.ReadAllBytes(OldDb);
+
+        var result = DataFolderMigration.Run(Folders, Now, pathComparison: StringComparison.Ordinal);
+
+        Assert.Equal(FolderMove.Moved, result.Documents);
+        Assert.Null(result.Notice);
+        Assert.Null(result.Error);
+        Assert.Equal(bytes, File.ReadAllBytes(NewDb));
+    }
+
+    [Fact]
+    public void The_finishing_start_also_updates_the_folder_settings()
+    {
+        CreateOldData();
+        SetSettings(OldDb,
+            (nameof(AppSettings.BackupFolder), Path.Combine(Folders.OldDocuments, "My backups")),
+            (nameof(AppSettings.InvoiceFolder), Path.Combine(Folders.OldDocuments, "Invoices 2026")));
+        var stuck = FailWhenMoving(Folders.NewDocuments) with { MoveFile = FileInUse };
+
+        var first = DataFolderMigration.Run(Folders, Now, stuck, StringComparison.Ordinal);
+        Assert.True(first.DocumentsFailed);
+
+        var second = DataFolderMigration.Run(Folders, Now.AddMinutes(1), pathComparison: StringComparison.Ordinal);
+
+        Assert.Equal(FolderMove.Moved, second.Documents);
+        var settings = new Database(NewDb).LoadSettings();
+        Assert.Equal(Path.Combine(Folders.NewDocuments, "My backups"), settings.BackupFolder);
+        Assert.Equal(Path.Combine(Folders.NewDocuments, "Invoices 2026"), settings.InvoiceFolder);
+    }
 }

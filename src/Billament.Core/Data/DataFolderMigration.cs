@@ -77,7 +77,8 @@ public static class DataFolderMigration
     /// Does the move, in this order: the safety copy, the local folder, the Documents folder, the database file. A
     /// pair whose new name is taken is skipped on its own. A failed Documents move leaves the data where it was.
     /// </summary>
-    public static DataMoveResult Run(DataFolders folders, DateTime now, FileOps? ops = null)
+    public static DataMoveResult Run(
+        DataFolders folders, DateTime now, FileOps? ops = null, StringComparison? pathComparison = null)
     {
         string oldDb = Path.Combine(folders.OldDocuments, DataFolders.OldDatabaseName);
         string movedOldDb = Path.Combine(folders.NewDocuments, DataFolders.OldDatabaseName);
@@ -195,6 +196,9 @@ public static class DataFolderMigration
 
         return new DataMoveResult(documents.Value, local.Value, backup, null, notice, localError);
     }
+
+    /// <summary>Placeholder for the failing tests; replaced by the real rule in the next commit.</summary>
+    public static string? RemapFolder(string? value, string oldFolder, string newFolder, StringComparison comparison) => value;
 
     // The state of a pair when no move is needed, or null when the old folder is there and the new name is free.
     private static FolderMove? Decide(string oldFolder, string newFolder)
