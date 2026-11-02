@@ -58,6 +58,7 @@ public partial class App : Application
 
         try
         {
+            if (!MoveOldData()) return;
             Db = new Database(Database.DefaultPath);
             var backup = BackUpTodayAsync(Db);
             var main = new MainWindow();
@@ -66,9 +67,42 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            ErrorReport.Show($"Billament could not start. Its data is in {Database.DefaultPath}; nothing was changed.", ex);
+            ErrorReport.Show(
+                $"Billament could not start, and nothing was changed. Your data is in {Path.GetDirectoryName(Database.DefaultPath)}, " +
+                $"or still in the {DataFolders.OldName} folder next to it if Billament has not moved it yet.", ex);
             Shutdown(1);
         }
+    }
+
+    /// <summary>
+    /// The one-time move of the data folders from the old name (see <see cref="DataFolderMigration"/>). Returns false
+    /// when start-up must stop: the Documents move failed, the user has been told where the data is, and nothing new
+    /// was created.
+    /// </summary>
+    private bool MoveOldData()
+    {
+        var folders = DataFolders.Under(
+            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
+        var result = DataFolderMigration.Run(folders, DateTime.Now);
+
+        // The details go to the error file; the message the user reads stays a plain sentence.
+        string? saved = result.Error is null
+            ? null
+            : ErrorReport.Save(result.Problem ?? result.Notice ?? "The one-time move to the Billament folders did not fully finish.", result.Error);
+
+        if (result.DocumentsFailed)
+        {
+            string text = result.Problem ?? "Billament could not move your data, so it has closed. Nothing was lost.";
+            if (saved is not null) text += $"\n\nDetails for the developer were saved in {saved}.";
+            MessageBox.Show(text, "Billament", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Shutdown(1);
+            return false;
+        }
+
+        if (result.Notice is not null)
+            MessageBox.Show(result.Notice, "Billament", MessageBoxButton.OK, MessageBoxImage.Information);
+        return true;
     }
 
     /// <summary>

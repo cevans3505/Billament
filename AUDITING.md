@@ -16,7 +16,7 @@ a comment starting `AUDIT:`. To list them all:
 git grep -n "AUDIT:" -- src
 ```
 
-or search the `src` folder for `AUDIT:` in any editor. There are 27 tags, and the tables below summarize them. If you find
+or search the `src` folder for `AUDIT:` in any editor. There are 35 tags, and the tables below summarize them. If you find
 code that does any of these things **without** an `AUDIT:` tag, that's a gap in this guide; please report it.
 
 ## Network
@@ -58,9 +58,16 @@ quote or a space stays one argument.
 | `%LOCALAPPDATA%\Billament\update-check.json` | When GitHub was last asked, and the newest release it reported | `UpdateService.SaveState` |
 | `%LOCALAPPDATA%\Billament\window-layout.json` | Window positions and sizes | `WindowLayout.Save` |
 | `%LOCALAPPDATA%\Billament\Errors\` | Details of unexpected errors (app version, Windows version, time, the error) | `ErrorReport.Save` |
+| `Documents\PrintInvoicer\Backups\billament-<date>-<time>-pre-rename.db` | Once, on the first start of 4.0: a safety copy of the old database, made before anything is moved. It moves with the folder to `Documents\Billament\Backups` and is never pruned | `DataFolderMigration.Run` (through `DatabaseBackup.Manual`) |
+| `Documents\PrintInvoicer` renamed to `Documents\Billament`, and `%LOCALAPPDATA%\PrintInvoicer` renamed to `%LOCALAPPDATA%\Billament` | Once, on the first start of 4.0: each old folder is renamed in place (`Directory.Move`), only when no folder, file or link has the new name yet; each pair is decided on its own. Nothing is copied, merged, overwritten or deleted. If the database rename then fails, the Documents folder is renamed back | `DataFolderMigration.Run` |
+| `printinvoicer.db` renamed to `billament.db` inside `Documents\Billament` | Right after the folder moves (`File.Move`, never over an existing file); a later start finishes this rename if an earlier one could not | `DataFolderMigration.Run` |
 
 **Restoring a backup** (Settings, after a confirmation) replaces the database's contents with the chosen backup. The
 current data is backed up first, and a damaged backup is refused.
+
+**The one-time move in 4.0.** The app was called PrintInvoicer before 4.0. On the first start of 4.0 it copies the old
+database, then renames the old data folders to the new names as listed above. If the Documents folder cannot be moved,
+the app says where your data is and closes without creating the new folder, so the next start can try again.
 
 Nothing is written anywhere else. The program never modifies the sliced files it reads.
 
@@ -74,6 +81,7 @@ README pictures, are listed under [Building and releasing](#building-and-releasi
 | Sliced files the user chooses or drags in (`.gcode.3mf`, `.gcode`, `.goo`), opened read-only | `BambuFileReader`, `GooFileReader` |
 | The original sliced file again, read-only, to get a sharper plate picture for an invoice | `BambuFileReader.ReadPlateImage` |
 | Its own database, backups (when restoring), and the small JSON files above | `Database`, `DatabaseBackup`, `UpdateService`, `WindowLayout` |
+| Whether the old and new data folders and database files exist (names only, no contents), before the one-time move | `DataFolderMigration.Run` |
 
 The file readers treat every file as untrusted. They never run anything from a file. The XML parser has DTDs and
 external references switched off, every size is capped, and every number is range-checked (limits in
@@ -95,7 +103,7 @@ A search of this project's code finds none of the following:
 - **Background services or startup entries.**
 
 To check for yourself, search `src` for: `Registry`, `DllImport`, `LibraryImport`, `Assembly.Load`, `HttpClient`,
-`WebClient`, `Socket`, `Process.Start`, `File.Delete`, `Clipboard`.
+`WebClient`, `Socket`, `Process.Start`, `File.Delete`, `Directory.Move`, `File.Move`, `Clipboard`.
 
 ## Third-party packages in the program
 
