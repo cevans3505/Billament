@@ -30,8 +30,7 @@ result: pass. The same `ProcessStartInfo` that `ShellCommands` builds (`Argument
 
 ### 5. Checksum on the next real release tag
 expected: On the next `v<version>` tag, the draft release has `PrintInvoicer-<version>.zip` and `PrintInvoicer-<version>.zip.sha256`, a `SHA-256:` line in the notes, the "Write the SHA-256 checksum file" step passes, and `Get-FileHash .\PrintInvoicer-<version>.zip -Algorithm SHA256` matches the notes and the file.
-result: skipped
-reason: "Deferred follow-up: the maintainer decided (2026-11-02) to check this on release 3.7.0, made right after phase 2 is merged to main. It cannot run before the merge."
+result: pass (2026-11-02, release run 41380345274 for v3.7.0). The draft release has PrintInvoicer-3.7.0.zip and PrintInvoicer-3.7.0.zip.sha256, the notes end with `SHA-256: d86f3935...b296dac71`, the "Write the SHA-256 checksum file" step passed, and Get-FileHash on the downloaded zip printed the same hash as the notes and the file. The exe inside reports 3.7.0.
 
 ### 6. Maintainer review of judgment items
 expected: The FIX-02 test uses literal totals; docs do not claim the checksum proves who built the release; the QuestPDF text is not presented as legal advice and matches QuestPDF's page.
@@ -40,10 +39,10 @@ result: pass (2026-11-02). The maintainer approved the README checksum caveat an
 ## Summary
 
 total: 6
-passed: 5
+passed: 6
 issues: 0
 pending: 0
-skipped: 1
+skipped: 0
 blocked: 0
 
 ## Gaps
@@ -56,3 +55,4 @@ blocked: 0
 - test: 5
   idea: "Check the SHA-256 file, the SHA-256 line in the notes and Get-FileHash on the 3.7.0 draft release"
   deferred_at: 2026-11-02
+  resolved: "Checked on the v3.7.0 draft release, 2026-11-02 (test 5 now passes)"
