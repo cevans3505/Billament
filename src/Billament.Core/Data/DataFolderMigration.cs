@@ -80,8 +80,25 @@ public static class DataFolderMigration
     public static DataMoveResult Run(DataFolders folders, DateTime now, FileOps? ops = null)
     {
         string oldDb = Path.Combine(folders.OldDocuments, DataFolders.OldDatabaseName);
-        FolderMove? documents = Decide(folders.OldDocuments, folders.NewDocuments);
+        string movedOldDb = Path.Combine(folders.NewDocuments, DataFolders.OldDatabaseName);
+        string movedNewDb = Path.Combine(folders.NewDocuments, DataFolders.NewDatabaseName);
+
+        // An earlier start moved the folder but could not rename the database inside it: finish that, touching only
+        // the new folder. This stands in for a marker file.
+        bool repair = FolderExists(folders.NewDocuments) && FileExists(movedOldDb) && !FileExists(movedNewDb);
+        FolderMove? documents = repair ? FolderMove.Moved : Decide(folders.OldDocuments, folders.NewDocuments);
         FolderMove? local = Decide(folders.OldLocal, folders.NewLocal);
+
+        // A new folder that Billament did not make blocks the move. Say where the old data is, once, and touch nothing.
+        string? notice = null;
+        if (documents == FolderMove.NewFolderExists && FolderExists(folders.NewDocuments) && FileExists(oldDb)
+            && !FileExists(movedOldDb) && !FileExists(movedNewDb))
+        {
+            notice = $"Billament found your data from {DataFolders.OldName} in {folders.OldDocuments}, but a folder named " +
+                $"{folders.NewDocuments} already exists, so nothing was moved and Billament is starting with the data in " +
+                $"{folders.NewDocuments}. To use your old data instead, close Billament, rename or move " +
+                $"{folders.NewDocuments}, and start Billament again.";
+        }
 
         // The safety copy comes first, so a move that goes wrong later still leaves a good copy of the data.
         string? backup = null;
@@ -123,6 +140,21 @@ public static class DataFolderMigration
             }
         }
 
+        if (repair)
+        {
+            try
+            {
+                RenameDatabase(folders.NewDocuments, ops);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                string message = $"Billament could not finish setting up your data in {folders.NewDocuments}, so it has closed. " +
+                    $"Nothing was lost: your data is in that folder, in the file {DataFolders.OldDatabaseName}. Close any " +
+                    "other program that may be using it and start Billament again.";
+                return new DataMoveResult(FolderMove.Failed, local.Value, null, message, null, ex);
+            }
+        }
+
         if (documents is null)
         {
             try
@@ -140,8 +172,7 @@ public static class DataFolderMigration
             }
 
             string? backupNow = backup is null ? null : Path.Combine(folders.NewDocuments, "Backups", Path.GetFileName(backup));
-            string movedDb = Path.Combine(folders.NewDocuments, DataFolders.OldDatabaseName);
-            if (FileExists(movedDb) && !FileExists(Path.Combine(folders.NewDocuments, DataFolders.NewDatabaseName)))
+            if (FileExists(movedOldDb) && !FileExists(movedNewDb))
             {
                 try
                 {
@@ -152,10 +183,17 @@ public static class DataFolderMigration
                     return UndoMove(folders, ops, local.Value, backup, backupNow, ex);
                 }
             }
+            else if (FileExists(movedOldDb))
+            {
+                // Both files were in the old folder. Never overwrite one with the other; keep both.
+                notice = $"Billament moved your data to {folders.NewDocuments}. That folder already held a file named " +
+                    $"{DataFolders.NewDatabaseName}, so Billament uses that file and left {DataFolders.OldDatabaseName} next to " +
+                    "it unchanged.";
+            }
             backup = backupNow;
         }
 
-        return new DataMoveResult(documents.Value, local.Value, backup, null, null, localError);
+        return new DataMoveResult(documents.Value, local.Value, backup, null, notice, localError);
     }
 
     // The state of a pair when no move is needed, or null when the old folder is there and the new name is free.
