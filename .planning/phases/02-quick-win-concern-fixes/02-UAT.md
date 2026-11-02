@@ -34,18 +34,18 @@ result: pass. The same `ProcessStartInfo` that `ShellCommands` builds (`Argument
 
 ### 5. Checksum on the next real release tag
 expected: On the next `v<version>` tag, the draft release has `PrintInvoicer-<version>.zip` and `PrintInvoicer-<version>.zip.sha256`, a `SHA-256:` line in the notes, the "Write the SHA-256 checksum file" step passes, and `Get-FileHash .\PrintInvoicer-<version>.zip -Algorithm SHA256` matches the notes and the file.
-result: [pending] (needs the next release tag)
+result: [pending] (decided: checked on release 3.7.0, made right after phase 2 is merged to main)
 
 ### 6. Maintainer review of judgment items
 expected: The FIX-02 test uses literal totals; docs do not claim the checksum proves who built the release; the QuestPDF text is not presented as legal advice and matches QuestPDF's page.
-result: [pending] (maintainer)
+result: pass (2026-11-02). The maintainer approved the README checksum caveat and the QuestPDF license text as written. `LegacyDatabaseTests.cs` asserts literal totals (87.20m, 40.40m, 12.70m, 16.05m), not computed ones.
 
 ## Summary
 
 total: 6
-passed: 4
+passed: 5
 issues: 0
-pending: 2
+pending: 1
 skipped: 0
 blocked: 0
 
