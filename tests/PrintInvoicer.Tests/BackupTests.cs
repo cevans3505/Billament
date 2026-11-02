@@ -126,4 +126,61 @@ public sealed class BackupTests : IDisposable
         }
         Assert.Single(db.GetJobs());
     }
+
+    [Fact]
+    public void Two_manual_backups_in_the_same_second_both_succeed()
+    {
+        DbWithJob("Caps");
+        var t = new DateTime(2026, 10, 30, 9, 0, 0);
+        string first = DatabaseBackup.Manual(DbPath, Folder, t);
+        string second = DatabaseBackup.Manual(DbPath, Folder, t);   // a double click: replaces the first
+
+        Assert.Equal(first, second);
+        Assert.Empty(Directory.GetFiles(Folder, "*.partial"));
+        Assert.Equal("Caps", new Database(second).GetJobs().Single().Title);
+    }
+
+    [Fact]
+    public void Daily_and_manual_backups_running_at_once_both_finish()
+    {
+        DbWithJob("Caps");
+        var start = new DateTime(2026, 10, 1, 9, 0, 0);
+        for (int round = 0; round < 20; round++)
+        {
+            // Different target files each round: two copies never write the same target at once.
+            var day = start.AddDays(round);
+            Parallel.Invoke(
+                () => DatabaseBackup.DailyIfDue(DbPath, Folder, day, keep: 30),
+                () => DatabaseBackup.Manual(DbPath, Folder, day));
+        }
+
+        Assert.Equal(40, DatabaseBackup.List(Folder).Count);
+        Assert.Empty(Directory.GetFiles(Folder, "*.partial"));
+    }
+
+    [Fact]
+    public void A_partial_file_from_another_copy_is_left_alone()
+    {
+        DbWithJob("Caps");
+        Directory.CreateDirectory(Folder);
+        string stray = Path.Combine(Folder, "printinvoicer-2026-10-30.db.partial");
+        File.WriteAllText(stray, "someone else's half-written copy");
+
+        Assert.NotNull(DatabaseBackup.DailyIfDue(DbPath, Folder, new DateTime(2026, 10, 30, 8, 0, 0)));
+
+        Assert.Equal("someone else's half-written copy", File.ReadAllText(stray));
+    }
+
+    [Fact]
+    public void A_failed_backup_removes_its_own_partial_file()
+    {
+        DbWithJob("Caps");
+        // A folder where the backup file should go makes the final rename fail after the copy is written.
+        Directory.CreateDirectory(Path.Combine(Folder, "printinvoicer-2026-10-30.db"));
+
+        var ex = Assert.ThrowsAny<Exception>(() => DatabaseBackup.DailyIfDue(DbPath, Folder, new DateTime(2026, 10, 30, 8, 0, 0)));
+
+        Assert.True(ex is IOException or UnauthorizedAccessException, ex.ToString());
+        Assert.Empty(Directory.GetFiles(Folder, "*.partial"));
+    }
 }

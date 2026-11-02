@@ -16,7 +16,7 @@ a comment starting `AUDIT:`. To list them all:
 git grep -n "AUDIT:" -- src
 ```
 
-or search the `src` folder for `AUDIT:` in any editor. There are 26 tags, and the tables below summarize them. If you find
+or search the `src` folder for `AUDIT:` in any editor. There are 27 tags, and the tables below summarize them. If you find
 code that does any of these things **without** an `AUDIT:` tag, that's a gap in this guide; please report it.
 
 ## Network
@@ -50,7 +50,7 @@ only in response to a click.
 | Location | What | Where in the code |
 | --- | --- | --- |
 | `Documents\PrintInvoicer\printinvoicer.db` | All jobs, materials, printers and settings (SQLite) | `Database` (`Open`, used by every read and write) |
-| `Documents\PrintInvoicer\Backups\` (or the folder set in Settings) | Daily and manual copies of the database; oldest daily copies deleted to keep 14; a leftover half-written `.partial` copy deleted before retrying | `DatabaseBackup` |
+| `Documents\PrintInvoicer\Backups\` (or the folder set in Settings) | Daily and manual copies of the database; oldest daily copies deleted to keep 14; each copy is first written to its own uniquely named `.partial` file and then moved into place; a copy that fails deletes its own `.partial` file and no other (one left by a copy that was cut off, for example by a power cut, stays until you delete it) | `DatabaseBackup` |
 | `Documents\PrintInvoicer\Invoices\` (or the folder set in Settings) | Invoice and detail-sheet PDFs | `InvoicePdf.Write` |
 | `%TEMP%\PrintInvoicer previews\` | Preview PDFs | `InvoicePdf.Write` |
 | `%LOCALAPPDATA%\PrintInvoicer\update-check.json` | When GitHub was last asked, and the newest release it reported | `UpdateService.SaveState` |

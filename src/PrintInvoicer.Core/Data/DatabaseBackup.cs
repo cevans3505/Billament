@@ -107,18 +107,34 @@ public static partial class DatabaseBackup
         }
     }
 
-    // Copies the database with SQLite's backup API (consistent even while the app is using it) to a temporary name,
-    // then renames it into place, so an interrupted copy never leaves a half-written backup.
+    // Copies the database with SQLite's backup API (consistent even while the app is using it) to a temporary file of
+    // its own, then renames it into place, so an interrupted copy never leaves a half-written backup and two copies
+    // never share a temporary file.
     private static void Copy(string dbPath, string target)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(target))!);
-        string temp = target + ".partial";
-        if (File.Exists(temp)) File.Delete(temp);
-        using (var src = Open(dbPath, readOnly: true))
-        using (var dst = Open(temp, readOnly: false))
-            src.BackupDatabase(dst);
-        // AUDIT: file write. Puts a finished backup in place in the backup folder.
-        File.Move(temp, target, overwrite: true);
+        string temp = $"{target}.{Guid.NewGuid():N}.partial";
+        try
+        {
+            using (var src = Open(dbPath, readOnly: true))
+            using (var dst = Open(temp, readOnly: false))
+                src.BackupDatabase(dst);
+            // AUDIT: file write. Puts a finished backup in place in the backup folder.
+            File.Move(temp, target, overwrite: true);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SqliteException)
+        {
+            try
+            {
+                // AUDIT: file delete. Removes this copy's own half-written .partial file after a failure; never any other file.
+                File.Delete(temp);
+            }
+            catch (Exception cleanup) when (cleanup is IOException or UnauthorizedAccessException)
+            {
+                // The copy already failed; that error is the one to report.
+            }
+            throw;
+        }
     }
 
     // Unpooled, so the backup files are released as soon as the copy is done and can be moved or deleted.
