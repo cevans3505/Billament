@@ -22,6 +22,12 @@ public record ReleaseInfo(Version Version, string Url);
 public partial class UpdateService : ObservableObject
 {
     /// <summary>The repository whose releases are checked. A fork that publishes its own releases changes this.</summary>
+    /// <remarks>
+    /// Copies of 3.7.0 and older ask GitHub about cevans3505/PrintInvoicer, the name before 4.0.0. GitHub redirects that
+    /// old name to this repository, so those copies still see new releases (their Download button opens the old releases
+    /// page, which GitHub also redirects). Never create a new repository with the old name: that would end the redirect
+    /// and leave those copies unable to see any update.
+    /// </remarks>
     public const string Repository = "cevans3505/Billament";
 
     /// <summary>The project's releases page, opened by Download when no specific release is known.</summary>

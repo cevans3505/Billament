@@ -142,6 +142,8 @@ jobs:
 
           Download $zip, unzip it and run Billament.exe. See Read me.txt in the zip for first-time setup.
 
+          Upgrading from PrintInvoicer 3.7 or older: close PrintInvoicer, then run Billament.exe. On its first start Billament saves a safety copy of your data and moves it from Documents\PrintInvoicer to Documents\Billament. You can then delete PrintInvoicer.exe and pin Billament.exe again. Read me.txt in the zip has the details.
+
           SHA-256: $sha
           "@
           gh release create $tag $zip "$zip.sha256" --draft --verify-tag --title "Billament $env:VERSION" --notes $notes

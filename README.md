@@ -4,6 +4,9 @@ A Windows desktop app for invoicing 3D printing jobs on FDM and resin printers. 
 resin files, prices material, machine time, electricity and your own extra costs per plate, adds slicing, modeling and
 post-processing fees, and produces a PDF invoice plus an internal detail sheet.
 
+Billament was called PrintInvoicer before version 4.0.0. If you used PrintInvoicer, see
+[Renamed from PrintInvoicer](#renamed-from-printinvoicer).
+
 ## What it looks like
 
 These pictures are made from sample data, so every name in them is made up.
@@ -62,6 +65,31 @@ Page 1 of the invoice the customer receives. Click it to open it full size.
 > them. **[AUDITING.md](AUDITING.md)** lists every place the program touches the network, other programs or files, and
 > each of those lines in the code is marked `AUDIT:` so they are easy to find. If you find a problem, please
 > [open an issue](https://github.com/cevans3505/Billament/issues).
+
+## Renamed from PrintInvoicer
+
+Version 4.0.0 renamed PrintInvoicer to Billament. Old links to `github.com/cevans3505/PrintInvoicer` lead here.
+If you used PrintInvoicer 3.7 or older:
+
+- Close PrintInvoicer, then run `Billament.exe` from the [latest release](https://github.com/cevans3505/Billament/releases/latest).
+  Copies of 3.7.0 and older ask GitHub about the old name, which GitHub redirects here, so their update bar should show
+  4.0.0; if it does not, download it from that link.
+- On its first start Billament saves a safety copy of your database, then moves your data from `Documents\PrintInvoicer`
+  to `Documents\Billament` (the database becomes `billament.db`) and the window and update-check files from
+  `%LOCALAPPDATA%\PrintInvoicer` to `%LOCALAPPDATA%\Billament`.
+- The safety copy is `Documents\Billament\Backups\billament-<date>-<time>-pre-rename.db`. It is never deleted
+  automatically.
+- After the move you can delete `PrintInvoicer.exe` and pin `Billament.exe` to the taskbar instead.
+- A backup or invoice folder you set on the Settings tab inside `Documents\PrintInvoicer` is changed to the same place
+  inside `Documents\Billament`.
+- Old backups named `printinvoicer-*.db` still show up under **Restore a backup...**. Restoring one is fine: folders on
+  the Settings tab that pointed inside `Documents\PrintInvoicer` are moved to the same place inside `Documents\Billament`.
+- If the move cannot finish (for example PrintInvoicer is still open, or a sync app is busy with the folder), Billament
+  says where your data is, leaves it there and closes. Close the other program and start Billament again.
+- If a folder named `Documents\Billament` already exists, nothing is moved and Billament tells you where your old data is.
+- Do not start `PrintInvoicer.exe` again after the move. It would not find your data and would start an empty one in
+  `Documents\PrintInvoicer`.
+- If you share Documents between PCs (OneDrive, for example), update every PC to Billament together.
 
 ## Install or update
 

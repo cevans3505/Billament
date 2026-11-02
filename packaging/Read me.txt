@@ -13,6 +13,29 @@ Your jobs and settings are saved in Documents\Billament. The app copies them to 
 once a day (the newest 14 are kept). For safety against a failed drive, set Settings > Backups > Back up to
 a OneDrive, Dropbox or network folder. Restore a backup... on the same tab puts an old copy back.
 
+Coming from PrintInvoicer
+-------------------------
+Billament is the new name of PrintInvoicer, from version 4.0. Your jobs and finalized invoices come with you.
+1. Close PrintInvoicer, then run Billament.exe. After that you can delete PrintInvoicer.exe and pin Billament.exe to the
+   taskbar instead.
+2. On its first start Billament saves a safety copy of your database, then moves your data from Documents\PrintInvoicer
+   to Documents\Billament (the database becomes billament.db) and its window and update-check files from
+   %LOCALAPPDATA%\PrintInvoicer to %LOCALAPPDATA%\Billament.
+3. The safety copy is in Documents\Billament\Backups, named billament-<date>-<time>-pre-rename.db. It is never deleted
+   automatically.
+4. A backup or invoice folder you set on the Settings tab inside Documents\PrintInvoicer is changed to the same place
+   inside Documents\Billament. Old backups named printinvoicer-<date>.db still show up under Restore a backup, and
+   restoring one is fine: folders on the Settings tab that pointed inside Documents\PrintInvoicer are moved to the same
+   place inside Documents\Billament.
+5. If the move cannot finish (for example PrintInvoicer is still open, or a sync app is busy with the folder),
+   Billament tells you where your data is, leaves it there and closes. Close the other program and start Billament
+   again.
+6. If a folder named Documents\Billament already exists, nothing is moved and Billament tells you where your old data
+   is.
+7. Do not start PrintInvoicer.exe again after the move. It would not find your data and would start an empty one in
+   Documents\PrintInvoicer.
+8. If you share Documents between PCs (OneDrive, for example), update every PC to Billament together.
+
 First time
 ----------
 1. Settings tab: enter your name and contact line (they head every invoice), the default customer (who new jobs are
@@ -36,8 +59,9 @@ change it; it is then priced at your current rates again.
 Updates
 -------
 The app tells you when there is a new version: a bar appears at the top of the window (it checks at most once a
-day, and can be turned off in Settings). New versions are posted at https://github.com/cevans3505/Billament/releases. Close the app, download the
-newest zip, and replace your Billament.exe with the one inside. Your jobs and settings are kept, since they live
-in Documents\Billament, not next to the exe. Upgrades convert your data automatically.
+day, and can be turned off in Settings). New versions are posted at
+https://github.com/cevans3505/Billament/releases (old links to the PrintInvoicer page lead there too). Close the
+app, download the newest zip, and replace your Billament.exe with the one inside. Your jobs and settings are kept,
+since they live in Documents\Billament, not next to the exe. Upgrades convert your data automatically.
 
 The source code is at https://github.com/cevans3505/Billament (MIT license) if you want to fork it and change it.
