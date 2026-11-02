@@ -49,12 +49,21 @@ if ((Test-Path -LiteralPath $oldLnk) -and ($shell.CreateShortcut($oldLnk).Target
 
 # The fixed default location of the old install, never derived from -InstallDir.
 $oldDir = Join-Path $env:LOCALAPPDATA 'Programs\PrintInvoicer'
-# AUDIT: file read. Whether the old program folder holds PrintInvoicer.exe and no data (no .db file, no Backups or Invoices folder).
+$sep = [IO.Path]::DirectorySeparatorChar
+$oldFull = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($oldDir).TrimEnd($sep)
+$installFull = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($InstallDir).TrimEnd($sep)
+$link = [IO.FileAttributes]::ReparsePoint
+# The new install must not be the old folder or inside it, by name or through a junction, link or subst drive: so the
+# old folder must not be a link, must hold no link (nothing outside it can be reached), and must hold no Billament.exe
+# (where the new install would really be if a link or drive pointed it there).
+# AUDIT: file read. Whether the old program folder holds PrintInvoicer.exe and no data (no .db file, no Backups or Invoices folder), is not and holds no link, and holds no Billament.exe.
 $oldIsProgramOnly = (Test-Path -LiteralPath (Join-Path $oldDir 'PrintInvoicer.exe')) -and
-    -not (Get-ChildItem -LiteralPath $oldDir -Recurse -Force -Filter '*.db') -and
+    ($installFull -ne $oldFull) -and -not $installFull.StartsWith($oldFull + $sep, [StringComparison]::OrdinalIgnoreCase) -and
+    -not ((Get-Item -LiteralPath $oldDir -Force).Attributes -band $link) -and
+    -not (Get-ChildItem -LiteralPath $oldDir -Recurse -Force | Where-Object {
+        ($_.Attributes -band $link) -or ($_.Name -like '*.db') -or ($_.Name -eq 'Billament.exe') }) -and
     -not (Test-Path -LiteralPath (Join-Path $oldDir 'Backups')) -and
-    -not (Test-Path -LiteralPath (Join-Path $oldDir 'Invoices')) -and
-    ((Resolve-Path -LiteralPath $oldDir).Path -ne (Resolve-Path -LiteralPath $InstallDir).Path)
+    -not (Test-Path -LiteralPath (Join-Path $oldDir 'Invoices'))
 if ($oldIsProgramOnly) {
     # AUDIT: file delete. The old program folder (PrintInvoicer.exe and its files), never a data folder.
     Remove-Item -LiteralPath $oldDir -Recurse -Force

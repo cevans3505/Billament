@@ -130,7 +130,9 @@ These run on a developer's PC or on GitHub, never on users' machines:
   with a Start menu shortcut, and refreshes Windows' icon cache (`ie4uinit.exe -show`). After a successful install it
   removes the old PrintInvoicer install from before 4.0: the Start menu shortcut `PrintInvoicer.lnk`, only when it
   points at `PrintInvoicer.exe`, and the folder `%LOCALAPPDATA%\Programs\PrintInvoicer`, only when it holds
-  `PrintInvoicer.exe`, no `.db` file and no `Backups` or `Invoices` folder, and is not the new install folder. It never
+  `PrintInvoicer.exe`, no `.db` file and no `Backups` or `Invoices` folder, is not a link and holds no link (junction or
+  symbolic link), holds no `Billament.exe`, and is neither the new install folder nor a folder that holds it. The
+  `Billament.exe` check catches a new install folder that reaches the old one through a link or a `subst` drive. It never
   touches the data folders. These checks and deletes are tagged `# AUDIT:` in the script (two file reads and two file
   deletes), outside the `src` count above.
 - **`make-readme-images.ps1`** rebuilds the three README pictures. It starts `dotnet test` for one screen test
