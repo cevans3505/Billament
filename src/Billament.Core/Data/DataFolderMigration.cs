@@ -217,6 +217,17 @@ public static class DataFolderMigration
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
+                // Something else, such as a second copy of Billament starting at the same moment, may have moved the
+                // folder in between. Then the data is in the new folder, and the message must say so.
+                if (!FolderExists(folders.OldDocuments) && FolderExists(folders.NewDocuments))
+                {
+                    string moved = $"Billament could not move your data from {folders.OldDocuments} to {folders.NewDocuments}, " +
+                        "because it was moved at the same moment, probably by a second copy of Billament that was starting. " +
+                        $"Billament has closed. Nothing was lost: your data is now in {folders.NewDocuments}. Use the other " +
+                        "copy of Billament, or start Billament again.";
+                    string? backupMoved = backup is null ? null : Path.Combine(folders.NewDocuments, "Backups", Path.GetFileName(backup));
+                    return new DataMoveResult(FolderMove.Failed, local.Value, backupMoved, moved, null, ex);
+                }
                 string message = $"Billament could not move your data from {folders.OldDocuments} to {folders.NewDocuments}, so it " +
                     $"has closed. Nothing was lost: your data is still in {folders.OldDocuments}. Close {DataFolders.OldName} and " +
                     "any other program that may be using that folder, such as a sync app, and start Billament again.";

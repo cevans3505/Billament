@@ -56,9 +56,24 @@ public partial class App : Application
             if (args.ExceptionObject is Exception ex) ErrorReport.Show("Billament ran into an error it cannot recover from and will close.", ex);
         };
 
+        // The one-time move gets its own message: by the time something unexpected goes wrong, a folder may already
+        // have moved, so the text names both places and never says that nothing changed.
         try
         {
             if (!MoveOldData()) return;
+        }
+        catch (Exception ex)
+        {
+            ErrorReport.Show(
+                $"Billament could not finish the one-time move of your data to the {DataFolders.NewName} folders, so it has " +
+                $"closed. Nothing was deleted: your data is in the {DataFolders.NewName} folder in your Documents folder, or " +
+                $"still in the {DataFolders.OldName} folder next to it if it has not moved yet.", ex);
+            Shutdown(1);
+            return;
+        }
+
+        try
+        {
             Db = new Database(Database.DefaultPath);
             var backup = BackUpTodayAsync(Db);
             var main = new MainWindow();
@@ -68,7 +83,7 @@ public partial class App : Application
         catch (Exception ex)
         {
             ErrorReport.Show(
-                $"Billament could not start, and nothing was changed. Your data is in {Path.GetDirectoryName(Database.DefaultPath)}, " +
+                $"Billament could not start. Nothing was deleted: your data is in {Path.GetDirectoryName(Database.DefaultPath)}, " +
                 $"or still in the {DataFolders.OldName} folder next to it if Billament has not moved it yet.", ex);
             Shutdown(1);
         }

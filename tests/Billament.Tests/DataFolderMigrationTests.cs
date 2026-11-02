@@ -366,6 +366,32 @@ public sealed class DataFolderMigrationTests : IDisposable
     }
 
     [Fact]
+    public void A_move_made_by_a_second_copy_at_the_same_moment_names_the_new_folder()
+    {
+        CreateOldData();
+        // The folder is moved by someone else just before this copy's own move, which then fails.
+        var raced = new FileOps(MoveDirectory: (from, to) =>
+        {
+            Directory.Move(from, to);
+            if (from == Folders.OldDocuments) throw new DirectoryNotFoundException("The folder is gone.");
+        });
+
+        var result = DataFolderMigration.Run(Folders, Now, raced);
+
+        Assert.True(result.DocumentsFailed);
+        Assert.Contains($"your data is now in {Folders.NewDocuments}", result.Problem);
+        Assert.DoesNotContain("still in", result.Problem);
+        Assert.Equal(Path.Combine(Folders.NewDocuments, "Backups", Path.GetFileName(result.BackupPath)), result.BackupPath);
+        Assert.True(File.Exists(result.BackupPath));
+        Assert.True(File.Exists(Path.Combine(Folders.NewDocuments, DataFolders.OldDatabaseName)));
+
+        // The next start finishes the rename in the new folder.
+        var next = DataFolderMigration.Run(Folders, Now.AddMinutes(1));
+        Assert.Equal(FolderMove.Moved, next.Documents);
+        Assert.True(File.Exists(NewDb));
+    }
+
+    [Fact]
     public void A_failed_local_move_is_not_a_failure()
     {
         CreateOldData();
