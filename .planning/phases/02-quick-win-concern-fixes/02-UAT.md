@@ -34,7 +34,8 @@ result: pass. The same `ProcessStartInfo` that `ShellCommands` builds (`Argument
 
 ### 5. Checksum on the next real release tag
 expected: On the next `v<version>` tag, the draft release has `PrintInvoicer-<version>.zip` and `PrintInvoicer-<version>.zip.sha256`, a `SHA-256:` line in the notes, the "Write the SHA-256 checksum file" step passes, and `Get-FileHash .\PrintInvoicer-<version>.zip -Algorithm SHA256` matches the notes and the file.
-result: [pending] (decided: checked on release 3.7.0, made right after phase 2 is merged to main)
+result: skipped
+reason: "Deferred follow-up: the maintainer decided (2026-11-02) to check this on release 3.7.0, made right after phase 2 is merged to main. It cannot run before the merge."
 
 ### 6. Maintainer review of judgment items
 expected: The FIX-02 test uses literal totals; docs do not claim the checksum proves who built the release; the QuestPDF text is not presented as legal advice and matches QuestPDF's page.
@@ -45,11 +46,17 @@ result: pass (2026-11-02). The maintainer approved the README checksum caveat an
 total: 6
 passed: 5
 issues: 0
-pending: 1
-skipped: 0
+pending: 0
+skipped: 1
 blocked: 0
 
 ## Gaps
 
 - WR-03 confirmed on Windows. With the invoice folder set to a path ending in a space, `InvoicePdf.Write` for a Final invoice throws `InvalidOperationException: The PDF name "Invoice 2026-001 Wire Brush Inserts.pdf" would not be saved in ...\InvoicesTrailing .` Windows drops the trailing space when the folder is created, so `SafeFileName.IsDirectlyInside` rejects every invoice. The exception is not caught where invoices are made, so you would see the error report instead of a PDF. Needs a fix (trim or normalize the folder before the check) before the phase closes. Fixed in 5139a31 (folder normalized the way Windows does); re-run this check on Windows.
   - Resolved on Windows (2026-11-02, branch head d60114c): `dotnet test PrintInvoicer.sln` passed 485 Core and 11 UI tests, including `An_invoice_folder_with_a_trailing_space_still_saves`. Starting `ShellCommands.ShowFolder` with a folder typed as `...\Harbor Dive Shop invoices ` (trailing space) after `CreateDirectory` opened the trimmed folder in Explorer, so the Settings Open button also works for such a folder.
+
+## Deferred Follow-Ups
+
+- test: 5
+  idea: "Check the SHA-256 file, the SHA-256 line in the notes and Get-FileHash on the 3.7.0 draft release"
+  deferred_at: 2026-11-02
