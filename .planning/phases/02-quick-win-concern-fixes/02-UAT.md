@@ -1,18 +1,14 @@
 ---
-status: testing
+status: complete
 phase: 02-quick-win-concern-fixes
 source: [02-VERIFICATION.md]
 started: 2026-11-02T00:00:00Z
-updated: 2026-11-02T04:00:00Z
+updated: 2026-11-02T02:47:50.372Z
 ---
 
 ## Current Test
 
-number: 5
-name: Checksum on the next real release tag
-expected: |
-  On the next `v<version>` tag, the draft release has the `.zip` and `.zip.sha256`, a `SHA-256:` line in the notes, and `Get-FileHash` matches.
-awaiting: next release tag
+[testing complete]
 
 ## Tests
 
