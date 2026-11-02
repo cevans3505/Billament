@@ -30,10 +30,10 @@
 
 - [x] **FIX-01** (C11, 3.00): Each release publishes a SHA-256 checksum file, and the release steps tell people to state it in the release notes
 - [x] **FIX-02** (C27, 2.50): A test opens a fixture database from before snapshots existed, with finalized jobs and no snapshot, and checks that each one gets a snapshot exactly once, with the expected totals
-- [ ] **FIX-03** (C06, 2.00): Explorer / Process.Start calls pass paths with `ArgumentList`, so a path containing a quote still works
+- [x] **FIX-03** (C06, 2.00): Explorer / Process.Start calls pass paths with `ArgumentList`, so a path can never turn into extra Explorer switches; if Explorer needs one quoted string instead, a path containing a double quote is refused
 - [x] **FIX-04** (C09, 2.00): A manual backup and the startup daily backup can't use the same temporary `.partial` file
 - [x] **FIX-05** (C10, 2.00): The update-check response is read with a size cap, and a response over the cap is treated as "no update info"
-- [ ] **FIX-06** (C14, 2.00): Invoice file and folder names built from user data are sanitized and length-limited, with tests for `..`, `\`, `:` and reserved names like `CON`
+- [x] **FIX-06** (C14, 2.00): Invoice file and folder names built from user data are sanitized and length-limited, with tests for `..`, `\`, `:` and reserved names like `CON`
 - [x] **FIX-07** (C22, 2.00): README and AUDITING.md state the QuestPDF Community license revenue-threshold condition
 - [ ] **FIX-08** (C01, 1.50): The one-time freeze of older finalized jobs is recorded in `settings` and doesn't run again once it's done, and invoices already frozen keep their totals
 - [ ] **FIX-09** (C08 + C19, 1.50): After a backup restore, nothing can save over the restored database before the restart, and the restart works from an installed copy
@@ -81,10 +81,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TRIA-01 | Phase 2 | Complete |
 | FIX-01 | Phase 2 | Complete |
 | FIX-02 | Phase 2 | Complete |
-| FIX-03 | Phase 2 | Pending |
+| FIX-03 | Phase 2 | Complete |
 | FIX-04 | Phase 2 | Complete |
 | FIX-05 | Phase 2 | Complete |
-| FIX-06 | Phase 2 | Pending |
+| FIX-06 | Phase 2 | Complete |
 | FIX-07 | Phase 2 | Complete |
 | FIX-08 | Phase 3 | Pending |
 | FIX-09 | Phase 3 | Pending |
