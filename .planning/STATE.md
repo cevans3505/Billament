@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 03
 current_phase_name: Rename to Billament
 status: executing
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-11-02T05:10:13.034Z"
+stopped_at: Completed 03-03-PLAN.md
+last_updated: "2026-11-02T05:18:17.298Z"
 last_activity: 2026-11-02
 last_activity_desc: Phase 03 execution started
-state_head: d3ce1c20b66541b4c09fc9bf44aa1fd91bce3875
+state_head: 48bce67272c4c1d33a0294de7ed99d30ff8da8d2
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 12
-  completed_plans: 8
+  completed_plans: 9
   percent: 40
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 03 (Rename to Billament) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-11-02 — Phase 03 execution started
 
@@ -63,6 +63,7 @@ Progress: [████░░░░░░] 40%
 | Phase 02 P04 | 15min | 3 tasks | 9 files |
 | Phase 03 P01 | 3 min | 2 tasks | 99 files |
 | Phase 03 P02 | 6 min | 2 tasks | 4 files |
+| Phase 03 P03 | 6 min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,8 @@ Recent decisions affecting current work:
 - [Phase 03]: 03-01: rename done by git mv and scripted sed with gates; no old-name text written, later plans add deliberate ones by hand
 - [Phase 03]: 03-02: A failed Documents move stops start-up (plain message, Shutdown(1)) before any new Database; a failed LocalAppData move is not fatal
 - [Phase 03]: 03-02: Only the main database file is renamed; a repair rule (old-name db inside the new folder) finishes a half-done move instead of a marker file
+- [Phase 03]: 03-03: folder settings rewritten by raw SQL on BackupFolder and InvoiceFolder only, file opened for writing only when a value changes; a failed rewrite is a notice
+- [Phase 03]: 03-03: DataFolderMigration.UpdateFolderSettings is public and also runs after Restore a backup (D-25); old printinvoicer-* backups are listed, restored and pruned by the date in the name
 
 ### Pending Todos
 
@@ -112,6 +115,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-02T05:10:12.940Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-11-02T05:18:17.188Z
+Stopped at: Completed 03-03-PLAN.md
 Resume file: None
