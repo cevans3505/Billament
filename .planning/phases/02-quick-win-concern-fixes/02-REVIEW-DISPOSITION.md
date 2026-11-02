@@ -5,7 +5,7 @@ titles: json
 findings:
   - id: WR-01
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "Long invoice-number prefixes lose the sequence number, so different invoices get the same PDF name"
   - id: WR-02
     severity: warning
@@ -13,7 +13,7 @@ findings:
     title: "Titles over 60 characters (and a few other titles) now produce a different PDF name than before, so a regenerated invoice sits beside the old file"
   - id: WR-03
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "`IsDirectlyInside` compares two differently normalized paths and may throw for a valid folder with a trailing space or dot on Windows"
   - id: IN-01
     severity: info
@@ -35,7 +35,7 @@ findings:
     severity: info
     disposition: open
     title: "The Windows behavior of the Explorer arguments has not been checked"
-open: 8
+open: 6
 total: 8
 recorded: 2026-11-02T01:47:26.299Z
 ---
@@ -44,9 +44,9 @@ recorded: 2026-11-02T01:47:26.299Z
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | open | - |
+| WR-01 | warning | fixed | dee2ad2: a long number is cut from the front, so the sequence digits survive |
 | WR-02 | warning | open | - |
-| WR-03 | warning | open | - |
+| WR-03 | warning | fixed | 5139a31: folder normalized like Windows before create, path and check (confirmed on Windows in 02-UAT.md) |
 | IN-01 | info | open | - |
 | IN-02 | info | open | - |
 | IN-03 | info | open | - |

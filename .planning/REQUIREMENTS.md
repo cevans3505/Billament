@@ -30,7 +30,7 @@
 
 - [x] **FIX-01** (C11, 3.00): Each release publishes a SHA-256 checksum file, and the release steps tell people to state it in the release notes
 - [x] **FIX-02** (C27, 2.50): A test opens a fixture database from before snapshots existed, with finalized jobs and no snapshot, and checks that each one gets a snapshot exactly once, with the expected totals
-- [x] **FIX-03** (C06, 2.00): Explorer / Process.Start calls pass paths with `ArgumentList`, so a path can never turn into extra Explorer switches; if Explorer needs one quoted string instead, a path containing a double quote is refused
+- [x] **FIX-03** (C06, 2.00): Explorer / Process.Start calls pass paths with `ArgumentList`, so each path is passed to Explorer as its own argument and spaces or quotes in a path cannot change the command (checked on Windows: the two-argument form works, no fallback is used)
 - [x] **FIX-04** (C09, 2.00): A manual backup and the startup daily backup can't use the same temporary `.partial` file
 - [x] **FIX-05** (C10, 2.00): The update-check response is read with a size cap, and a response over the cap is treated as "no update info"
 - [x] **FIX-06** (C14, 2.00): Invoice file and folder names built from user data are sanitized and length-limited, with tests for `..`, `\`, `:` and reserved names like `CON`
@@ -101,9 +101,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 **Coverage:**
 - v1 requirements: 24 total
 - Mapped to phases: 24
-- Complete: 1 (TRIA-01)
+- Complete: 13 (SHOW-01 to SHOW-05, TRIA-01, FIX-01 to FIX-07)
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-11-01*
-*Last updated: 2026-11-01 after roadmap creation*
+*Last updated: 2026-11-02 after Phase 2 review fixes (FIX-03 wording, coverage count)*
