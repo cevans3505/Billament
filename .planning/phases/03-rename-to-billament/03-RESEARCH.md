@@ -498,6 +498,14 @@ Recommended changes:
 | A6 | `Path.Exists` is false and `FileSystemInfo.LinkTarget` is non-null for a dangling directory symlink/junction at the new name | Data Move Design | A dangling link would be treated as free and `Directory.Move` would fail with IOException; result is still `Failed` with data intact, so the impact is a worse message |
 | A7 | Native-library self-extraction leaves a stale old-name cache under `%TEMP%` | Runtime State | None (disposable) |
 
+**A1 verification moved to the 03-06 gate (plan check revision, 2026-11-02):** A1 stays unverified in this research,
+because the container cannot reach GitHub for this repository and the rename has not happened. It is verified in plan
+03-06: Task 2 step 3, after the rename and before 4.0.0 is published (curl on the old API address: 301 or 307, a
+`location:` ending in `/releases/latest`, 200, and `"tag_name": "v3.7.0"` in the body), and Task 3 step 6, after
+publishing (Check now in an installed 3.7.0 shows 4.0.0). A2 is checked by Task 2 step 4. If either fails, the fallback
+is the manual notice written by plan 03-04 (README "Renamed from PrintInvoicer" section and the release-notes
+paragraph); 3.7.0 cannot be patched, and no repository with the old name is ever created to work around it.
+
 **Confirm with the user before they become locked:** A1 and A2 are verified by the manual checklist rather than by a decision.
 
 ## Open Questions
