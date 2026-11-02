@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 03
 current_phase_name: Rename to Billament
 status: executing
-stopped_at: Completed 03-03-PLAN.md
-last_updated: "2026-11-02T05:18:17.298Z"
+stopped_at: Completed 03-04-PLAN.md
+last_updated: "2026-11-02T05:23:05.429Z"
 last_activity: 2026-11-02
 last_activity_desc: Phase 03 execution started
-state_head: 48bce67272c4c1d33a0294de7ed99d30ff8da8d2
+state_head: 64c30e1a1a463684b8d948c4be8fcc5f0784fca4
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 12
-  completed_plans: 9
+  completed_plans: 10
   percent: 40
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 03 (Rename to Billament) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 Status: Ready to execute
 Last activity: 2026-11-02 — Phase 03 execution started
 
@@ -64,6 +64,7 @@ Progress: [████░░░░░░] 40%
 | Phase 03 P01 | 3 min | 2 tasks | 99 files |
 | Phase 03 P02 | 6 min | 2 tasks | 4 files |
 | Phase 03 P03 | 6 min | 3 tasks | 6 files |
+| Phase 03 P04 | 10 min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,8 @@ Recent decisions affecting current work:
 - [Phase 03]: 03-02: Only the main database file is renamed; a repair rule (old-name db inside the new folder) finishes a half-done move instead of a marker file
 - [Phase 03]: 03-03: folder settings rewritten by raw SQL on BackupFolder and InvoiceFolder only, file opened for writing only when a value changes; a failed rewrite is a notice
 - [Phase 03]: 03-03: DataFolderMigration.UpdateFolderSettings is public and also runs after Restore a backup (D-25); old printinvoicer-* backups are listed, restored and pruned by the date in the name
+- [Phase 03]: 03-04: The old name stays only in allowlisted files (migration, old backup names, publish.ps1 cleanup, UpdateService remark, rename notes); CLAUDE.md has an Old name rule saying not to rename them
+- [Phase 03]: 03-04: publish.ps1 removes the old PrintInvoicer shortcut and program folder only after the new install exists, at the fixed default path, never a data folder; real run deferred to 03-05 (no pwsh in the cloud container)
 
 ### Pending Todos
 
@@ -115,6 +118,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-02T05:18:17.188Z
-Stopped at: Completed 03-03-PLAN.md
+Last session: 2026-11-02T05:23:05.321Z
+Stopped at: Completed 03-04-PLAN.md
 Resume file: None
