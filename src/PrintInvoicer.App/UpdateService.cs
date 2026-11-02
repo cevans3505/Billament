@@ -4,7 +4,6 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PrintInvoicer.Core.Updates;
@@ -131,20 +130,13 @@ public partial class UpdateService : ObservableObject
             latest = await _fetch(cts.Token);
             _lastFetchFailed = false;
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException or IOException)
+        catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException or JsonException or IOException)
         {
             _lastFetchFailed = true;
             return FromState(LoadState());   // offline: fall back to what was known
         }
         SaveState(new State(DateTime.UtcNow, latest is null ? null : "v" + ReleaseVersion.Display(latest.Version), latest?.Url));
         return latest;
-    }
-
-    // The two fields read from GitHub's reply; everything else in it is ignored.
-    private sealed class LatestRelease
-    {
-        [JsonPropertyName("tag_name")] public string? TagName { get; set; }
-        [JsonPropertyName("html_url")] public string? HtmlUrl { get; set; }
     }
 
     private static readonly HttpClient Http = CreateClient();
@@ -158,15 +150,21 @@ public partial class UpdateService : ObservableObject
         return c;
     }
 
-    /// <summary>GitHub's latest published (non-draft, non-prerelease) release; null when the repo has none.</summary>
+    /// <summary>
+    /// GitHub's latest published (non-draft, non-prerelease) release; null when the repo has none or the reply is over
+    /// <see cref="LatestReleaseReply.MaxBytes"/>.
+    /// </summary>
     private static async Task<ReleaseInfo?> FetchLatestAsync(CancellationToken ct)
     {
         // AUDIT: network. The app's only network request: a GET of this repository's latest public release from GitHub's
         // API. It sends nothing about you or your data, and only reads the release's tag and page address.
-        using var response = await Http.GetAsync($"https://api.github.com/repos/{Repository}/releases/latest", ct);
+        using var response = await Http.GetAsync($"https://api.github.com/repos/{Repository}/releases/latest", HttpCompletionOption.ResponseHeadersRead, ct);
         if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
         response.EnsureSuccessStatusCode();
-        var release = await JsonSerializer.DeserializeAsync<LatestRelease>(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
+        // A reply larger than the cap is not read at all: like a 404, it means no update information.
+        if (response.Content.Headers.ContentLength > LatestReleaseReply.MaxBytes) return null;
+        await using var body = await response.Content.ReadAsStreamAsync(ct);
+        var release = await LatestReleaseReply.ReadAsync(body, ct);
         return ReleaseVersion.Parse(release?.TagName) is Version v ? new ReleaseInfo(v, release!.HtmlUrl ?? ReleasesPage) : null;
     }
 
