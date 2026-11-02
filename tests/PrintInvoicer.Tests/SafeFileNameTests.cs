@@ -155,6 +155,62 @@ public sealed class SafeFileNameTests
         Assert.False(SafeFileName.IsDirectlyInside(folder, Path.Combine(folder, "sub", "a.pdf")));
     }
 
+    // A long prefix in Settings: the sequence digits are at the end of the number and must survive the cut.
+    [Theory]
+    [InlineData(28)]
+    [InlineData(29)]
+    [InlineData(30)]
+    [InlineData(35)]
+    [InlineData(40)]
+    public void Long_invoice_numbers_keep_their_sequence_digits(int prefixLength)
+    {
+        string prefix = "Harbor Dive Shop Invoice No 2026-0000".PadRight(prefixLength, 'x')[..prefixLength];
+
+        string first = SafeFileName.Compose("Invoice", prefix + "001", "Tube caps", ".pdf");
+        string second = SafeFileName.Compose("Invoice", prefix + "002", "Tube caps", ".pdf");
+
+        Assert.NotEqual(first, second);
+        Assert.Contains("001 Tube caps", first);
+        Assert.Contains("002 Tube caps", second);
+        Assert.True(first.Length <= SafeFileName.MaxNameLength);
+        AssertSafe(first, SafeFileName.MaxNameLength);
+    }
+
+    [Theory]
+    [InlineData("2026-001")]
+    [InlineData("draft 2026-10-31")]
+    [InlineData("Sample Printing Co. 2026-001")]
+    [InlineData("  Harbor-2026-001.  ")]
+    [InlineData("CON")]
+    [InlineData("123456789012345678901234567890")]
+    [InlineData("12345678901234567890123456789 ")]
+    public void Numbers_that_fit_give_the_same_name_as_before(string number)
+    {
+        string before = $"Invoice {SafeFileName.Clean(number, SafeFileName.MaxNumberLength)} Tube caps.pdf";
+
+        Assert.Equal(before, SafeFileName.Compose("Invoice", number, "Tube caps", ".pdf"));
+    }
+
+    [Fact]
+    public void A_long_number_cut_from_the_front_keeps_an_emoji_whole()
+    {
+        string number = new string('a', 10) + "\U0001F600" + new string('b', 29);
+
+        string part = SafeFileName.Compose("Invoice", number, "t", ".pdf")["Invoice ".Length..^" t.pdf".Length];
+
+        Assert.Equal(new string('b', 29), part);
+    }
+
+    [Fact]
+    public void A_long_number_cut_from_the_front_drops_leading_spaces_and_dots()
+    {
+        string number = new string('a', 10) + ". " + new string('b', 28);
+
+        string part = SafeFileName.Compose("Invoice", number, "t", ".pdf")["Invoice ".Length..^" t.pdf".Length];
+
+        Assert.Equal(new string('b', 28), part);
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

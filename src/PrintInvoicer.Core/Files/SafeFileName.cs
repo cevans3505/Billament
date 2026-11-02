@@ -77,7 +77,20 @@ public static class SafeFileName
         {
             throw new ArgumentException("The prefix and suffix leave too little room for the number and title.");
         }
-        return $"{prefix} {Clean(number, MaxNumberLength)} {Clean(title, MaxTitleLength)}{suffix}";
+        return $"{prefix} {CleanNumber(number)} {Clean(title, MaxTitleLength)}{suffix}";
+    }
+
+    // The invoice number as a name part. A number too long is cut from the front, not the back, because its sequence
+    // digits are at the end: two invoices with a long prefix then still get different names. A number that fits gives
+    // the same name part as Clean(number, MaxNumberLength).
+    private static string CleanNumber(string? number)
+    {
+        string whole = Clean(number, int.MaxValue);
+        if (whole.Length <= MaxNumberLength)
+        {
+            return whole;
+        }
+        return Clean(CutFront(whole, MaxNumberLength), MaxNumberLength);
     }
 
     /// <summary>
@@ -147,5 +160,20 @@ public static class SafeFileName
             cut = cut[..^1];
         }
         return cut.TrimEnd(' ', '.');
+    }
+
+    // Keeps the last maxLength chars, never leaving half of a surrogate pair, then trims leading spaces and dots.
+    private static string CutFront(string text, int maxLength)
+    {
+        if (text.Length <= maxLength)
+        {
+            return text;
+        }
+        string cut = text[^maxLength..];
+        if (char.IsLowSurrogate(cut[0]))
+        {
+            cut = cut[1..];
+        }
+        return cut.TrimStart(' ', '.');
     }
 }
