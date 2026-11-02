@@ -74,13 +74,13 @@ Plans:
   3. If the new folders already exist the old ones are never touched, and any failure during the move shows a plain message and leaves the old data where it was; the move logic is in Core with tests that run on Linux, and every new file or folder access has an `// AUDIT:` comment and an AUDITING.md row
   4. The update check, its allow-check, the issue page, README and docs point at `cevans3505/Billament`, and a 3.7.0 install still finds 4.0.0 through GitHub's redirect after the repository is renamed
   5. `publish.ps1`, `make-readme-images.ps1`, `tools/Make-Icon.ps1`, `ci.yml` and `release.yml` use the new name (install folder, Start menu shortcut with the old ones removed, `Billament-<version>.zip`, the "Billament 4.0" read-me heading check), and a case-insensitive search for "PrintInvoicer" finds only deliberate hits (migration old-folder names, history, changelog)
-**Plans**: 1/6 plans executed
+**Plans**: 2/6 plans executed
 Plans:
 **Wave 1**
 - [x] 03-01-PLAN.md - Tracer: git mv the solution, projects and icon, one scripted replacement over code, build Billament.sln and pass the unit tests; then scripts, workflows and docs, version 4.0.0 and the "Billament 4.0" read-me heading (NAME-01, NAME-02, NAME-05, NAME-06, NAME-07, NAME-08) [cloud]
 
 **Wave 2** *(blocked on Wave 1 completion: every later old-name string must be written after the bulk rename)*
-- [ ] 03-02-PLAN.md - Tracer: Core DataFolderMigration.Run (pre-rename backup, local folder, then Documents, then database rename with move-back), App.MoveOldData before new Database, Linux tests including byte-for-byte finalized totals, AUDIT tags and AUDITING.md rows (NAME-03) [cloud; App compile-checked, run on Windows in 03-05]
+- [x] 03-02-PLAN.md - Tracer: Core DataFolderMigration.Run (pre-rename backup, local folder, then Documents, then database rename with move-back), App.MoveOldData before new Database, Linux tests including byte-for-byte finalized totals, AUDIT tags and AUDITING.md rows (NAME-03) [cloud; App compile-checked, run on Windows in 03-05]
 
 **Wave 3** *(blocked on Wave 2 completion: DataFolderMigration.cs and AUDITING.md)*
 - [ ] 03-03-PLAN.md - Tracer: rewrite BackupFolder and InvoiceFolder settings that point inside the old folder; printinvoicer-*.db backups listed, restored and pruned by the date in the name; restore picker shows both names (NAME-04) [cloud]
@@ -132,6 +132,6 @@ Phases execute in numeric order: 1, 2, 3, 4, 5
 |-------|----------------|--------|-----------|
 | 1. README Showcase | 2/2 | Complete    | 2026-11-01 |
 | 2. Quick-Win Concern Fixes | 4/4 | Complete    | 2026-11-01 |
-| 3. Rename to Billament | 1/6 | In Progress | - |
+| 3. Rename to Billament | 2/6 | In Progress | - |
 | 4. Data Safety Fixes | 0/TBD | Not started | - |
 | 5. Slice File Submissions | 0/TBD | Not started | - |
