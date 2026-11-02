@@ -678,6 +678,42 @@ public sealed class DataFolderMigrationTests : IDisposable
         Assert.Equal(frozen, Frozen(NewDb));
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Custom_folders_follow_the_move_when_billament_db_was_already_in_the_old_folder(bool withOldDatabase)
+    {
+        // Both database files in the old folder (the notice case), or only billament.db: the app opens billament.db.
+        CreateOldData(withDatabase: withOldDatabase);
+        string already = Path.Combine(Folders.OldDocuments, DataFolders.NewDatabaseName);
+        _ = new Database(already);
+        SqliteConnection.ClearAllPools();
+        SetSettings(already,
+            (nameof(AppSettings.BackupFolder), Path.Combine(Folders.OldDocuments, "My backups")),
+            (nameof(AppSettings.InvoiceFolder), Path.Combine(Folders.OldDocuments, "Invoices 2026")));
+        byte[]? oldBytes = withOldDatabase ? File.ReadAllBytes(OldDb) : null;
+
+        var result = DataFolderMigration.Run(Folders, Now, pathComparison: StringComparison.Ordinal);
+
+        Assert.Equal(FolderMove.Moved, result.Documents);
+        Assert.Null(result.Error);
+        var settings = new Database(NewDb).LoadSettings();
+        Assert.Equal(Path.Combine(Folders.NewDocuments, "My backups"), settings.BackupFolder);
+        Assert.Equal(Path.Combine(Folders.NewDocuments, "Invoices 2026"), settings.InvoiceFolder);
+        if (oldBytes is not null)
+        {
+            // The old database is kept next to it, unchanged, and the notice says so.
+            SqliteConnection.ClearAllPools();
+            Assert.Equal(oldBytes, File.ReadAllBytes(Path.Combine(Folders.NewDocuments, DataFolders.OldDatabaseName)));
+            Assert.Contains(DataFolders.OldDatabaseName, result.Notice);
+        }
+
+        // The next backup lands in the moved folder and never recreates the old one.
+        string? made = DatabaseBackup.DailyIfDue(NewDb, settings.BackupFolder, Now);
+        Assert.Equal(settings.BackupFolder, Path.GetDirectoryName(made));
+        Assert.False(Directory.Exists(Folders.OldDocuments));
+    }
+
     [Fact]
     public void A_settings_update_that_fails_is_a_notice()
     {

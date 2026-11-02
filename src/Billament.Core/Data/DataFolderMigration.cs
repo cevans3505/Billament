@@ -102,8 +102,8 @@ public static class DataFolderMigration
     /// <summary>
     /// Does the move, in this order: the safety copy, the local folder, the Documents folder, the database file. A
     /// pair whose new name is taken is skipped on its own. A failed Documents move leaves the data where it was. Right
-    /// after the database file is renamed, a backup or invoice folder set inside the old Documents folder is pointed at
-    /// the same place inside the new one; <paramref name="pathComparison"/> decides whether letter case counts in that
+    /// after the Documents folder has moved, a backup or invoice folder set in billament.db inside the old Documents
+    /// folder is pointed at the same place inside the new one, also when billament.db was already in the old folder; <paramref name="pathComparison"/> decides whether letter case counts in that
     /// comparison (default: it does not on Windows, it does elsewhere). Throws <see cref="InvalidOperationException"/>,
     /// before touching anything, when a folder is not a full path.
     /// </summary>
@@ -114,7 +114,6 @@ public static class DataFolderMigration
         string oldDb = Path.Combine(folders.OldDocuments, DataFolders.OldDatabaseName);
         string movedOldDb = Path.Combine(folders.NewDocuments, DataFolders.OldDatabaseName);
         string movedNewDb = Path.Combine(folders.NewDocuments, DataFolders.NewDatabaseName);
-        bool renamed = false;
 
         // An earlier start moved the folder but could not rename the database inside it: finish that, touching only
         // the new folder. This stands in for a marker file.
@@ -198,7 +197,6 @@ public static class DataFolderMigration
             try
             {
                 RenameDatabase(folders.NewDocuments, ops);
-                renamed = true;
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
@@ -231,7 +229,6 @@ public static class DataFolderMigration
                 try
                 {
                     RenameDatabase(folders.NewDocuments, ops);
-                    renamed = true;
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                 {
@@ -248,10 +245,11 @@ public static class DataFolderMigration
             backup = backupNow;
         }
 
-        // The moved database now has its new name: point a custom backup or invoice folder at the new place. The data
-        // is safe whatever happens here, so a failure is only a notice.
+        // The Documents folder moved in this run (or this run finished an earlier move) and billament.db is there, as
+        // the file renamed just now or one that was already in the old folder: point a custom backup or invoice folder
+        // set in it at the new place. The data is safe whatever happens here, so a failure is only a notice.
         Exception? error = localError;
-        if (renamed)
+        if (documents == FolderMove.Moved && FileExists(movedNewDb))
         {
             try
             {
