@@ -22,10 +22,34 @@ public sealed record DataFolders(string OldDocuments, string NewDocuments, strin
     /// <summary>The database file name from 4.0 on; the same file name <see cref="Database.DefaultPath"/> uses.</summary>
     public const string NewDatabaseName = "billament.db";
 
-    /// <summary>The four folders under a Documents folder and a local application data folder. Reads nothing.</summary>
-    public static DataFolders Under(string documents, string localAppData) => new(
-        Path.Combine(documents, OldName), Path.Combine(documents, NewName),
-        Path.Combine(localAppData, OldName), Path.Combine(localAppData, NewName));
+    /// <summary>
+    /// The four folders under a Documents folder and a local application data folder. Reads nothing. Throws
+    /// <see cref="InvalidOperationException"/> when either folder is empty or not a full path (Windows returns an empty
+    /// path when it cannot find a special folder), because such a path would be resolved against the current folder.
+    /// </summary>
+    public static DataFolders Under(string documents, string localAppData)
+    {
+        RequireFullPath(documents);
+        RequireFullPath(localAppData);
+        return new(
+            Path.Combine(documents, OldName), Path.Combine(documents, NewName),
+            Path.Combine(localAppData, OldName), Path.Combine(localAppData, NewName));
+    }
+
+    /// <summary>Throws <see cref="InvalidOperationException"/> unless all four folders are full paths.</summary>
+    public void RequireFullPaths()
+    {
+        foreach (string path in new[] { OldDocuments, NewDocuments, OldLocal, NewLocal }) RequireFullPath(path);
+    }
+
+    // An empty or relative folder would make the move act on a folder under the current folder instead of the data.
+    private static void RequireFullPath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !Path.IsPathFullyQualified(path))
+            throw new InvalidOperationException(
+                "Billament could not find your Documents folder or your local application data folder, so it did not " +
+                "move or open any data.");
+    }
 }
 
 /// <summary>What happened to one pair of folders in <see cref="DataFolderMigration.Run"/>.</summary>
@@ -80,11 +104,13 @@ public static class DataFolderMigration
     /// pair whose new name is taken is skipped on its own. A failed Documents move leaves the data where it was. Right
     /// after the database file is renamed, a backup or invoice folder set inside the old Documents folder is pointed at
     /// the same place inside the new one; <paramref name="pathComparison"/> decides whether letter case counts in that
-    /// comparison (default: it does not on Windows, it does elsewhere).
+    /// comparison (default: it does not on Windows, it does elsewhere). Throws <see cref="InvalidOperationException"/>,
+    /// before touching anything, when a folder is not a full path.
     /// </summary>
     public static DataMoveResult Run(
         DataFolders folders, DateTime now, FileOps? ops = null, StringComparison? pathComparison = null)
     {
+        folders.RequireFullPaths();
         string oldDb = Path.Combine(folders.OldDocuments, DataFolders.OldDatabaseName);
         string movedOldDb = Path.Combine(folders.NewDocuments, DataFolders.OldDatabaseName);
         string movedNewDb = Path.Combine(folders.NewDocuments, DataFolders.NewDatabaseName);

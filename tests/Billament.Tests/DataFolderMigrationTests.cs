@@ -399,6 +399,33 @@ public sealed class DataFolderMigrationTests : IDisposable
         Assert.False(Directory.Exists(Path.Combine(Folders.NewDocuments, "Backups")));
     }
 
+    [Theory]
+    [InlineData("", "local")]
+    [InlineData("docs", "")]
+    [InlineData("  ", "local")]
+    [InlineData("docs", "local")]
+    public void Empty_or_relative_special_folders_are_refused(string documents, string localAppData)
+    {
+        // Windows returns an empty path when it cannot find a special folder; relative paths would hit the current folder.
+        string full(string p) => p == "local" ? Local : p;
+        Assert.Throws<InvalidOperationException>(() => DataFolders.Under(full(documents), full(localAppData)));
+    }
+
+    [Fact]
+    public void A_relative_folder_stops_the_move_before_anything_is_touched()
+    {
+        CreateOldData();
+        var oldDocs = Tree(Folders.OldDocuments);
+        var oldLocal = Tree(Folders.OldLocal);
+        var relative = Folders with { OldDocuments = DataFolders.OldName, NewDocuments = DataFolders.NewName };
+
+        Assert.Throws<InvalidOperationException>(() => DataFolderMigration.Run(relative, Now));
+
+        Assert.Equal(oldDocs, Tree(Folders.OldDocuments));
+        Assert.Equal(oldLocal, Tree(Folders.OldLocal));
+        Assert.False(Directory.Exists(Folders.NewLocal));
+    }
+
     [Fact]
     public void Runs_only_once()
     {
