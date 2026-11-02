@@ -40,6 +40,8 @@ public static class InvoicePdf
         var s = book.Settings;
         string folder = kind == InvoiceKind.Preview ? PreviewFolder
             : string.IsNullOrWhiteSpace(s.InvoiceFolder) ? DefaultFolder : s.InvoiceFolder;
+        // Windows drops trailing spaces and dots from folder names, so use the folder it will really create.
+        folder = SafeFileName.NormalizeFolder(folder);
         Directory.CreateDirectory(folder);
 
         string number = job.InvoiceNumber ?? $"draft {job.CreatedDate:yyyy-MM-dd}";

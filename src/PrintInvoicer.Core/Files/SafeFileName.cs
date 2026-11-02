@@ -104,7 +104,37 @@ public static class SafeFileName
         {
             return false;
         }
-        return string.Equals(directory, Path.TrimEndingDirectorySeparator(Path.GetFullPath(folder)), StringComparison.Ordinal);
+        // Both sides are trimmed the way Windows trims folder names, so a folder typed with a trailing space or dot
+        // still matches the folder Windows really uses. Subfolders and ".." were already resolved by GetFullPath.
+        return string.Equals(NormalizeFolder(directory),
+            Path.TrimEndingDirectorySeparator(NormalizeFolder(Path.GetFullPath(folder))), StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// The folder as Windows will really create and use it: trailing spaces and dots are removed from each segment,
+    /// so "C:\Invoices " becomes "C:\Invoices". The segments "." and "..", and a segment that would be left empty, are
+    /// kept as typed. Separators are kept as typed.
+    /// </summary>
+    public static string NormalizeFolder(string folder)
+    {
+        var sb = new StringBuilder(folder.Length);
+        int start = 0;
+        for (int i = 0; i <= folder.Length; i++)
+        {
+            if (i < folder.Length && folder[i] != Path.DirectorySeparatorChar && folder[i] != Path.AltDirectorySeparatorChar)
+            {
+                continue;
+            }
+            string segment = folder[start..i];
+            string trimmed = segment.TrimEnd(' ', '.');
+            sb.Append(segment is "." or ".." || trimmed.Length == 0 ? segment : trimmed);
+            if (i < folder.Length)
+            {
+                sb.Append(folder[i]);
+            }
+            start = i + 1;
+        }
+        return sb.ToString();
     }
 
     // Forbidden characters, control characters (U+0000 to U+001F and U+007F to U+009F) and unpaired surrogates become

@@ -181,6 +181,23 @@ public sealed class ScreenTests : IDisposable
         }
     });
 
+    // Windows drops a trailing space or dot from a folder name, so a pasted folder like "Invoices " must still save.
+    [Fact]
+    public void An_invoice_folder_with_a_trailing_space_still_saves() => WpfHost.Run(() =>
+    {
+        var s = _shop.Db.LoadSettings();
+        string folder = Path.Combine(_shop.Folder, "Harbor Dive Shop invoices");
+        s.InvoiceFolder = folder + " ";
+        _shop.Db.SaveSettings(s);
+        var book = _shop.Db.LoadPriceBook();
+        var job = _shop.FdmJob;
+
+        string path = InvoicePdf.Write(job, PricingCalculator.Calculate(job, book), book, InvoiceKind.Final);
+
+        Assert.Equal(folder, Path.GetDirectoryName(path));
+        Assert.True(File.Exists(path));
+    });
+
     [Fact]
     public void Update_bar_shows_only_for_a_newer_release() => WpfHost.Run(() =>
     {

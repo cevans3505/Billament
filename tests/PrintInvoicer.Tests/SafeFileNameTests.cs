@@ -155,6 +155,54 @@ public sealed class SafeFileNameTests
         Assert.False(SafeFileName.IsDirectlyInside(folder, Path.Combine(folder, "sub", "a.pdf")));
     }
 
+    // A folder typed with a trailing space or dot: Windows creates and uses it without them, so the check must agree.
+    [Theory]
+    [InlineData(" ")]
+    [InlineData(".")]
+    [InlineData(". ")]
+    [InlineData("  ..")]
+    public void A_folder_with_trailing_spaces_or_dots_still_counts_as_inside(string ending)
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "pi-names");
+        string typed = folder + ending;
+        string normalized = SafeFileName.NormalizeFolder(typed);
+
+        Assert.Equal(folder, normalized);
+        Assert.True(SafeFileName.IsDirectlyInside(typed, Path.Combine(normalized, "a.pdf")));
+        Assert.True(SafeFileName.IsDirectlyInside(typed, Path.Combine(typed, "a.pdf")));
+        Assert.True(SafeFileName.IsDirectlyInside(folder, Path.Combine(typed, "a.pdf")));
+        Assert.False(SafeFileName.IsDirectlyInside(typed, Path.Combine(normalized, "sub", "a.pdf")));
+        Assert.False(SafeFileName.IsDirectlyInside(typed, Path.Combine(normalized, "..", "a.pdf")));
+    }
+
+    [Fact]
+    public void Every_folder_segment_loses_its_trailing_spaces_and_dots()
+    {
+        char sep = Path.DirectorySeparatorChar;
+        string typed = string.Join(sep, "root", "Sample Printing Co. ", "Invoices.", "2026 ");
+        string expected = string.Join(sep, "root", "Sample Printing Co", "Invoices", "2026");
+
+        Assert.Equal(expected, SafeFileName.NormalizeFolder(typed));
+        Assert.Equal(expected + sep, SafeFileName.NormalizeFolder(typed + sep));
+    }
+
+    [Fact]
+    public void Folder_segments_that_are_relative_or_would_be_empty_are_kept()
+    {
+        char sep = Path.DirectorySeparatorChar;
+        string typed = string.Join(sep, "root", ".", "..", "...", " ", "a");
+
+        Assert.Equal(typed, SafeFileName.NormalizeFolder(typed));
+    }
+
+    [Fact]
+    public void A_normal_folder_is_unchanged()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "Sample Printing Co", "Invoices");
+
+        Assert.Equal(folder, SafeFileName.NormalizeFolder(folder));
+    }
+
     // A long prefix in Settings: the sequence digits are at the end of the number and must survive the cut.
     [Theory]
     [InlineData(28)]
