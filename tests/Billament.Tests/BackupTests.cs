@@ -224,4 +224,46 @@ public sealed class BackupTests : IDisposable
 
         Assert.Equal(["billament-2026-10-30.db", "printinvoicer-2026-10-29-120000-manual.db"], names);
     }
+
+    [Fact]
+    public void Daily_backups_with_both_names_are_pruned_by_date()
+    {
+        Directory.CreateDirectory(Folder);
+        var names = new List<string>();
+        // Ten days made by 3.7.0, ten made by 4.0, a manual copy under the old name and the move's safety copy.
+        for (int d = 1; d <= 10; d++) names.Add($"printinvoicer-2026-10-{d:00}.db");
+        for (int d = 1; d <= 10; d++) names.Add($"billament-2026-11-{d:00}.db");
+        names.Add("printinvoicer-2026-10-05-120000-manual.db");
+        names.Add("billament-2026-11-02-090000-pre-rename.db");
+        foreach (string name in names) File.WriteAllBytes(Path.Combine(Folder, name), [1, 2, 3]);
+
+        DatabaseBackup.Prune(Folder, keep: 14);
+
+        // The 14 newest days survive: all of November and the last four days of October. Ordering by the whole file
+        // name would keep every old-prefix file and delete the newest new ones.
+        var left = Directory.GetFiles(Folder).Select(f => Path.GetFileName(f)!).Order(StringComparer.Ordinal).ToList();
+        var expected = new List<string>
+        {
+            "printinvoicer-2026-10-05-120000-manual.db", "billament-2026-11-02-090000-pre-rename.db",
+        };
+        for (int d = 7; d <= 10; d++) expected.Add($"printinvoicer-2026-10-{d:00}.db");
+        for (int d = 1; d <= 10; d++) expected.Add($"billament-2026-11-{d:00}.db");
+        Assert.Equal(expected.Order(StringComparer.Ordinal).ToList(), left);
+        Assert.Equal(14 + 2, left.Count);
+        Assert.Contains("printinvoicer-2026-10-05-120000-manual.db", left);
+        Assert.Contains("billament-2026-11-02-090000-pre-rename.db", left);
+    }
+
+    [Fact]
+    public void No_second_daily_backup_on_the_day_of_the_upgrade()
+    {
+        DbWithJob("Caps");
+        Directory.CreateDirectory(Folder);
+        File.WriteAllBytes(Path.Combine(Folder, "printinvoicer-2026-11-02.db"), [1, 2, 3]);
+
+        var made = DatabaseBackup.DailyIfDue(DbPath, Folder, new DateTime(2026, 11, 2, 10, 0, 0));
+
+        Assert.Null(made);
+        Assert.False(File.Exists(Path.Combine(Folder, "billament-2026-11-02.db")));
+    }
 }
