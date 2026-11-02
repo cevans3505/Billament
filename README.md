@@ -1,5 +1,7 @@
 # Billament
 
+<p align="center"><img src="docs/images/logo.png" alt="Billament logo: a 3D printer nozzle printing a dollar sign onto a receipt" width="530"></p>
+
 A Windows desktop app for invoicing 3D printing jobs on FDM and resin printers. It reads sliced Bambu Studio and ELEGOO
 resin files, prices material, machine time, electricity and your own extra costs per plate, adds slicing, modeling and
 post-processing fees, and produces a PDF invoice plus an internal detail sheet.

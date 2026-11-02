@@ -140,6 +140,8 @@ These run on a developer's PC or on GitHub, never on users' machines:
   repository and to the test's own `bin` folder. The script then reads each picture's last-write time to check it was
   rebuilt. A normal test run, CI and `publish.ps1` write to the test's `bin` folder and to a temporary folder under
   `%TEMP%` that is deleted afterwards, but never to `docs/images`. It is a developer tool and is not in the release zip.
+- **`tools/make_logo.py`** draws the README logo and writes one PNG file to the path it is given
+  (`docs/images/logo.png`). It reads nothing and is not in the release zip.
   The script's program start and file read are tagged `# AUDIT:`. The `// AUDIT:` tags under `tests` are in
   `WpfHost.cs` (screenshots) and `ReadmeImageTests.cs` (README pictures), outside the `src` count above.
 - **`.github/workflows/ci.yml`** builds and tests every change on a GitHub Windows machine, with a read-only token.
