@@ -13,7 +13,7 @@ This milestone makes PrintInvoicer easier to understand at a glance, pays down k
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: README Showcase** - Generated offscreen images of the job list, job editor and invoice page 1 in the README (completed 2026-11-01)
-- [ ] **Phase 2: Quick-Win Concern Fixes** - Concerns scored 2.0 and above fixed in score order (checksums, legacy database test, safer paths, names and reads)
+- [x] **Phase 2: Quick-Win Concern Fixes** - Concerns scored 2.0 and above fixed in score order (checksums, legacy database test, safer paths, names and reads) (completed 2026-11-01)
 - [ ] **Phase 3: Data Safety Fixes** - Concerns scored 1.5 fixed in score order (freeze once, safe restore, ZIP cap, single instance, integrity check)
 - [ ] **Phase 4: Slice File Submissions** - GitHub issue forms for slice files, linked from the README and an app menu item, with privacy warnings
 
@@ -50,7 +50,7 @@ Plans:
   3. A test opens a fixture database from before snapshots existed and shows that each finalized job gets a snapshot exactly once, with the expected totals
   4. Opening a file or folder whose path contains a quote works, and a manual backup and the startup daily backup never share the same `.partial` file
   5. An update-check response over the size cap is treated as "no update info", and invoice file and folder names built from user data containing `..`, `\`, `:` or reserved names like `CON` come out safe and length-limited, with tests
-**Plans**: 4/4 plans executed
+**Plans**: 4/4 plans complete
 Plans:
 **Wave 1**
 - [x] 02-01-PLAN.md - Tracer: pre-snapshot fixture database opened by Database freezes each finalized invoice once at hand-derived totals, exactly-once check, and CONCERNS-TRIAGE re-score notes (FIX-02, TRIA-01) [cloud]
@@ -98,6 +98,6 @@ Phases execute in numeric order: 1, 2, 3, 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. README Showcase | 2/2 | Complete    | 2026-11-01 |
-| 2. Quick-Win Concern Fixes | 4/4 | In Progress | - |
+| 2. Quick-Win Concern Fixes | 4/4 | Complete    | 2026-11-01 |
 | 3. Data Safety Fixes | 0/TBD | Not started | - |
 | 4. Slice File Submissions | 0/TBD | Not started | - |
