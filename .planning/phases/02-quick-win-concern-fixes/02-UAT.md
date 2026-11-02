@@ -3,7 +3,7 @@ status: testing
 phase: 02-quick-win-concern-fixes
 source: [02-VERIFICATION.md]
 started: 2026-11-02T00:00:00Z
-updated: 2026-11-02T03:30:00Z
+updated: 2026-11-02T04:00:00Z
 ---
 
 ## Current Test
@@ -44,7 +44,7 @@ result: [pending] (maintainer)
 
 total: 6
 passed: 4
-issues: 1
+issues: 0
 pending: 2
 skipped: 0
 blocked: 0
@@ -52,3 +52,4 @@ blocked: 0
 ## Gaps
 
 - WR-03 confirmed on Windows. With the invoice folder set to a path ending in a space, `InvoicePdf.Write` for a Final invoice throws `InvalidOperationException: The PDF name "Invoice 2026-001 Wire Brush Inserts.pdf" would not be saved in ...\InvoicesTrailing .` Windows drops the trailing space when the folder is created, so `SafeFileName.IsDirectlyInside` rejects every invoice. The exception is not caught where invoices are made, so you would see the error report instead of a PDF. Needs a fix (trim or normalize the folder before the check) before the phase closes. Fixed in 5139a31 (folder normalized the way Windows does); re-run this check on Windows.
+  - Resolved on Windows (2026-11-02, branch head d60114c): `dotnet test PrintInvoicer.sln` passed 485 Core and 11 UI tests, including `An_invoice_folder_with_a_trailing_space_still_saves`. Starting `ShellCommands.ShowFolder` with a folder typed as `...\Harbor Dive Shop invoices ` (trailing space) after `CreateDirectory` opened the trimmed folder in Explorer, so the Settings Open button also works for such a folder.

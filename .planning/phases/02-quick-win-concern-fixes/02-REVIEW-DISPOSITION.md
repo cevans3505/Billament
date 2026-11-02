@@ -33,9 +33,9 @@ findings:
     title: "Bidirectional control characters are kept in file names"
   - id: IN-05
     severity: info
-    disposition: open
+    disposition: fixed
     title: "The Windows behavior of the Explorer arguments has not been checked"
-open: 6
+open: 5
 total: 8
 recorded: 2026-11-02T01:47:26.299Z
 ---
@@ -51,7 +51,7 @@ recorded: 2026-11-02T01:47:26.299Z
 | IN-02 | info | open | - |
 | IN-03 | info | open | - |
 | IN-04 | info | open | - |
-| IN-05 | info | open | - |
+| IN-05 | info | fixed | 4d3eb3a: checked on Windows (A2 passed, file highlighted); no code change needed |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
