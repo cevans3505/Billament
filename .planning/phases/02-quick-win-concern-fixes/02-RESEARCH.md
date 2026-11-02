@@ -458,17 +458,24 @@ Release verification line for the README (PowerShell, built in): `Get-FileHash .
 | A5 | The pre-snapshot schema can be approximated by the original CREATE TABLE statements minus later `AddColumnIfMissing` columns (git history is squashed, so the real 3.1 schema cannot be recovered) | FIX-02 | Fixture is not an exact 3.1 file; the test still guards the upgrade path, so word it as "shaped like" |
 | A6 | Leaving an orphaned `.partial` after a killed process is acceptable | FIX-04 | A stray file in the backup folder; optional sweep in `Prune` |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **C09: re-score as handled, or fix anyway?**
+All three were resolved during planning (2026-11-02) by following the recommendation; each line names the plan task
+that applies it.
+
+1. **C09: re-score as handled, or fix anyway?** RESOLVED: fix anyway, and record the partial handling.
    - What we know: the daily and manual names always differ; the remaining collision is two manual copies in the same second with the same label, plus the unlabeled blind delete.
    - What's unclear: whether the user wants the requirement kept given it is mostly handled.
    - Recommendation: still fix. It is about 10 lines, closes the double-click case, adds the missing `AUDIT:` tag, and FIX-04 is a listed requirement. Record the "already distinct" finding in CONCERNS-TRIAGE.md.
-2. **FIX-05: what should "no update info" do to the remembered state?**
+   - Resolution: plan 02-03 Task 3 makes the fix (a `.partial` file of its own per copy, the tagged own-file delete, tag count 27); plan 02-01 Task 3 writes the C09 "Partly" row in CONCERNS-TRIAGE.md saying the daily and manual names were already distinct. The decision is recorded in 02-03 ("Decision recorded").
+2. **FIX-05: what should "no update info" do to the remembered state?** RESOLVED: an over-cap reply returns `null`, exactly like a 404.
    - What we know: returning `null` saves `LatestTag = null` with the check time (UpdateService.cs:139), same as a 404, and a manual check then says "You have the latest version".
    - What's unclear: whether an over-cap reply should instead keep the previous answer (like a network failure).
    - Recommendation: return `null` as the requirement says ("no update info"); it is the simplest and consistent with 404.
-3. **Legacy freeze uses rules version 2.** Out of scope here, but flag for Phase 3 / FIX-08 that a v1-era invoice is frozen at v2 (Pitfall 5).
+   - Resolution: plan 02-03 Task 1 (`LatestReleaseReply.ReadAsync` returns null past `MaxBytes`, and `FetchLatestAsync` returns null when Content-Length is over the cap), pinned by the 02-03 backstop truth "An over-cap reply takes the same path as a 404" and the boundary facts in 02-03 Tasks 1 and 2.
+3. **Legacy freeze uses rules version 2.** RESOLVED: not changed in this phase; flagged for Phase 3.
+   - Out of scope here, but flag for Phase 3 / FIX-08 that a v1-era invoice is frozen at v2 (Pitfall 5).
+   - Resolution: plan 02-01 Task 3 writes the "Note for C01 (Phase 3, FIX-08)" paragraph in CONCERNS-TRIAGE.md, and plan 02-01 Tasks 1 and 2 use fixture values where rules versions 1 and 2 give the same cents, so the new test pins no rules quirk. `FreezeFinalizedJobs` is not touched (02-01 gate on `src/PrintInvoicer.Core/Data/Database.cs`).
 
 ## Environment Availability
 

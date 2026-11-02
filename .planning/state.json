@@ -1,0 +1,33 @@
+{
+  "contract": "1.0.0",
+  "flavor": "core",
+  "milestone": null,
+  "phases": [
+    {
+      "number": "1",
+      "name": "README Showcase",
+      "status": "complete"
+    },
+    {
+      "number": "2",
+      "name": "Quick-Win Concern Fixes",
+      "status": "pending"
+    },
+    {
+      "number": "3",
+      "name": "Data Safety Fixes",
+      "status": "pending"
+    },
+    {
+      "number": "4",
+      "name": "Slice File Submissions",
+      "status": "pending"
+    }
+  ],
+  "next": {
+    "command": "/gsd-progress --next",
+    "label": "Advance to the next step",
+    "reason": "Phase 2 of 4 · 25% · executing"
+  },
+  "updated_at": "2026-11-02T01:02:56.057Z"
+}
