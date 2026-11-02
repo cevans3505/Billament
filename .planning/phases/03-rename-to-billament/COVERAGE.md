@@ -1,0 +1,1 @@
+No external API integration: Phase 3 renames the project to Billament and moves local data folders once; the only network code is the existing GitHub latest-release check, whose single GET is unchanged apart from the repository name (the detector matched "Core API shape" and "wrap ... the rest" in plan prose).

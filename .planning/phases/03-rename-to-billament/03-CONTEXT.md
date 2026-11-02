@@ -24,7 +24,7 @@ All decisions below were given by the user before discussion and are locked.
 
 ### Name
 - **D-01:** The new name is **Billament** (bill plus filament), one word, capital B, no space. It replaces
-  "PrintInvoicer" in every place a user or developer sees it. — **Reversibility:** one-way — the repository name,
+  "PrintInvoicer" in every place a user or developer sees it. **Reversibility:** one-way. The repository name,
   data folder names and exe name are public and land on users' PCs; renaming again would need a second migration.
 - **D-02:** Names of things built from it:
   - exe and assembly: `Billament.exe` (`<AssemblyName>Billament</AssemblyName>`, `<Product>Billament</Product>`)
@@ -42,7 +42,7 @@ All decisions below were given by the user before discussion and are locked.
   Phase 5), so later phases are written under the new name from the start.
 - **D-05:** Ships as **4.0.0**: `<Version>4.0.0</Version>` in `src/Billament.App/Billament.App.csproj`, and the
   heading of `packaging/Read me.txt` becomes `Billament 4.0`. The release workflow's heading check looks for
-  `Billament <major>.<minor>`. — **Reversibility:** one-way — a published 4.0.0 tag and release cannot be taken back
+  `Billament <major>.<minor>`. **Reversibility:** one-way. A published 4.0.0 tag and release cannot be taken back
   without confusing the update check of everyone who saw it.
 
 ### Existing data (one-time move)
@@ -50,7 +50,7 @@ All decisions below were given by the user before discussion and are locked.
   `Documents\PrintInvoicer` to `Documents\Billament`, and `%LOCALAPPDATA%\PrintInvoicer` to `%LOCALAPPDATA%\Billament`.
   The database file inside is renamed from `printinvoicer.db` to `billament.db`. The move runs **before**
   `new Database(...)` opens anything, because the `Database` constructor writes (`EnsureCreated`,
-  `FreezeFinalizedJobs`). — **Reversibility:** one-way — after the move, 3.7.0 no longer finds the data where it
+  `FreezeFinalizedJobs`). **Reversibility:** one-way. After the move, 3.7.0 no longer finds the data where it
   looks; going back means moving folders by hand.
 - **D-07:** Make a **backup first**, before anything is moved. The backup must survive a failed move. (Where it goes
   and its name are Claude's discretion, see below; it must not be pruned as a daily backup.)
@@ -76,7 +76,7 @@ All decisions below were given by the user before discussion and are locked.
 ### GitHub repository
 - **D-14:** The repository is renamed from `cevans3505/PrintInvoicer` to `cevans3505/Billament`. **The user renames
   it on GitHub by hand when the phase ships**; this is a manual step in the end-of-phase checklist, not something a
-  plan or agent does. — **Reversibility:** costly — GitHub keeps redirects from the old name only until a new
+  plan or agent does. **Reversibility:** costly. GitHub keeps redirects from the old name only until a new
   repository takes the old name; links in 3.7.0 depend on them.
 - **D-15:** `UpdateService.Repository` becomes `cevans3505/Billament`. Its allow-check (release page URL must start
   with `https://github.com/{Repository}/`), the error report's issue page (`ErrorReport.IssuesPage`), the User-Agent
