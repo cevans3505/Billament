@@ -16,7 +16,7 @@ a comment starting `AUDIT:`. To list them all:
 git grep -n "AUDIT:" -- src
 ```
 
-or search the `src` folder for `AUDIT:` in any editor. There are 35 tags, and the tables below summarize them. If you find
+or search the `src` folder for `AUDIT:` in any editor. There are 36 tags, and the tables below summarize them. If you find
 code that does any of these things **without** an `AUDIT:` tag, that's a gap in this guide; please report it.
 
 ## Network
@@ -61,6 +61,7 @@ quote or a space stays one argument.
 | `Documents\PrintInvoicer\Backups\billament-<date>-<time>-pre-rename.db` | Once, on the first start of 4.0: a safety copy of the old database, made before anything is moved. It moves with the folder to `Documents\Billament\Backups` and is never pruned | `DataFolderMigration.Run` (through `DatabaseBackup.Manual`) |
 | `Documents\PrintInvoicer` renamed to `Documents\Billament`, and `%LOCALAPPDATA%\PrintInvoicer` renamed to `%LOCALAPPDATA%\Billament` | Once, on the first start of 4.0: each old folder is renamed in place (`Directory.Move`), only when no folder, file or link has the new name yet; each pair is decided on its own. Nothing is copied, merged, overwritten or deleted. If the database rename then fails, the Documents folder is renamed back | `DataFolderMigration.Run` |
 | `printinvoicer.db` renamed to `billament.db` inside `Documents\Billament` | Right after the folder moves (`File.Move`, never over an existing file); a later start finishes this rename if an earlier one could not | `DataFolderMigration.Run` |
+| `settings` rows `BackupFolder` and `InvoiceFolder` in `Documents\Billament\billament.db` | Once, right after the database rename: a folder set in Settings that is `Documents\PrintInvoicer` or inside it is changed to the same place inside `Documents\Billament`; any other value is left exactly as it is. The file is opened for writing only when one of these two values changes, and nothing else in it is written | `DataFolderMigration.Run` |
 
 **Restoring a backup** (Settings, after a confirmation) replaces the database's contents with the chosen backup. The
 current data is backed up first, and a damaged backup is refused.

@@ -1,4 +1,6 @@
+using System.Globalization;
 using Microsoft.Data.Sqlite;
+using Billament.Core.Models;
 
 namespace Billament.Core.Data;
 
@@ -75,7 +77,10 @@ public static class DataFolderMigration
 
     /// <summary>
     /// Does the move, in this order: the safety copy, the local folder, the Documents folder, the database file. A
-    /// pair whose new name is taken is skipped on its own. A failed Documents move leaves the data where it was.
+    /// pair whose new name is taken is skipped on its own. A failed Documents move leaves the data where it was. Right
+    /// after the database file is renamed, a backup or invoice folder set inside the old Documents folder is pointed at
+    /// the same place inside the new one; <paramref name="pathComparison"/> decides whether letter case counts in that
+    /// comparison (default: it does not on Windows, it does elsewhere).
     /// </summary>
     public static DataMoveResult Run(
         DataFolders folders, DateTime now, FileOps? ops = null, StringComparison? pathComparison = null)
@@ -83,6 +88,8 @@ public static class DataFolderMigration
         string oldDb = Path.Combine(folders.OldDocuments, DataFolders.OldDatabaseName);
         string movedOldDb = Path.Combine(folders.NewDocuments, DataFolders.OldDatabaseName);
         string movedNewDb = Path.Combine(folders.NewDocuments, DataFolders.NewDatabaseName);
+        var comparison = pathComparison ?? (OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+        bool renamed = false;
 
         // An earlier start moved the folder but could not rename the database inside it: finish that, touching only
         // the new folder. This stands in for a marker file.
@@ -146,6 +153,7 @@ public static class DataFolderMigration
             try
             {
                 RenameDatabase(folders.NewDocuments, ops);
+                renamed = true;
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
@@ -178,6 +186,7 @@ public static class DataFolderMigration
                 try
                 {
                     RenameDatabase(folders.NewDocuments, ops);
+                    renamed = true;
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                 {
@@ -194,11 +203,114 @@ public static class DataFolderMigration
             backup = backupNow;
         }
 
-        return new DataMoveResult(documents.Value, local.Value, backup, null, notice, localError);
+        // The moved database now has its new name: point a custom backup or invoice folder at the new place. The data
+        // is safe whatever happens here, so a failure is only a notice.
+        Exception? error = localError;
+        if (renamed)
+        {
+            try
+            {
+                RewriteFolderSettings(movedNewDb, folders, comparison);
+            }
+            catch (Exception ex) when (ex is SqliteException or IOException or UnauthorizedAccessException)
+            {
+                string settingsNotice = $"Billament moved your data to {folders.NewDocuments}, but could not update the backup or " +
+                    "invoice folder set in Settings. Check both on the Settings tab.";
+                notice = notice is null ? settingsNotice : notice + "\n\n" + settingsNotice;
+                error ??= ex;
+            }
+        }
+
+        return new DataMoveResult(documents.Value, local.Value, backup, null, notice, error);
     }
 
-    /// <summary>Placeholder for the failing tests; replaced by the real rule in the next commit.</summary>
-    public static string? RemapFolder(string? value, string oldFolder, string newFolder, StringComparison comparison) => value;
+    /// <summary>
+    /// The same place under the new data folder when <paramref name="value"/> is the old data folder or a folder inside
+    /// it; otherwise <paramref name="value"/> unchanged. Treats the setting as untrusted text and never touches the disk.
+    /// </summary>
+    public static string? RemapFolder(string? value, string oldFolder, string newFolder, StringComparison comparison)
+    {
+        // A blank or relative value would resolve against the current folder and could match by accident.
+        if (string.IsNullOrWhiteSpace(value) || !Path.IsPathFullyQualified(value)) return value;
+
+        string path, old, target;
+        try
+        {
+            path = Path.TrimEndingDirectorySeparator(Path.GetFullPath(value));
+            old = Path.TrimEndingDirectorySeparator(Path.GetFullPath(oldFolder));
+            target = Path.TrimEndingDirectorySeparator(Path.GetFullPath(newFolder));
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return value;
+        }
+
+        if (string.Equals(path, old, comparison)) return target;
+
+        // The character after the old folder must be a separator, so a sibling such as "<old>Old" never matches. The
+        // rest comes from the normalized path, so it cannot climb out with "..".
+        if (path.Length > old.Length && path.StartsWith(old, comparison)
+            && (path[old.Length] == Path.DirectorySeparatorChar || path[old.Length] == Path.AltDirectorySeparatorChar))
+            return target + path[old.Length..];
+        return value;
+    }
+
+    // Points BackupFolder and InvoiceFolder at the new place when they are inside the old data folder. Raw SQL on
+    // those two keys only (the Database class's whole-settings load and save would read and write every setting, and
+    // a bad value elsewhere would stop the load), and the file is opened for writing only when a value really changes.
+    // Returns true when a value changed.
+    private static bool RewriteFolderSettings(string databasePath, DataFolders folders, StringComparison comparison)
+    {
+        var changes = new List<(string Key, string Value)>();
+        using (var read = OpenDatabase(databasePath, readOnly: true))
+        {
+            using (var exists = read.CreateCommand())
+            {
+                exists.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'settings'";
+                if (Convert.ToInt64(exists.ExecuteScalar(), CultureInfo.InvariantCulture) == 0) return false;
+            }
+
+            foreach (string key in new[] { nameof(AppSettings.BackupFolder), nameof(AppSettings.InvoiceFolder) })
+            {
+                using var cmd = read.CreateCommand();
+                cmd.CommandText = "SELECT value FROM settings WHERE key = $k";
+                cmd.Parameters.AddWithValue("$k", key);
+                // A missing or empty row means "use the default folder", which already points at the new place.
+                if (cmd.ExecuteScalar() is not string { Length: > 0 } value) continue;
+                string? mapped = RemapFolder(value, folders.OldDocuments, folders.NewDocuments, comparison);
+                if (mapped is not null && !string.Equals(mapped, value, StringComparison.Ordinal)) changes.Add((key, mapped));
+            }
+        }
+        if (changes.Count == 0) return false;
+
+        using var write = OpenDatabase(databasePath, readOnly: false);
+        using var tx = write.BeginTransaction();
+        foreach (var (key, value) in changes)
+        {
+            using var cmd = write.CreateCommand();
+            cmd.Transaction = tx;
+            cmd.CommandText = "UPDATE settings SET value = $v WHERE key = $k";
+            cmd.Parameters.AddWithValue("$k", key);
+            cmd.Parameters.AddWithValue("$v", value);
+            cmd.ExecuteNonQuery();
+        }
+        tx.Commit();
+        return true;
+    }
+
+    // An unpooled connection that never creates a file: read-only, or read-write on a file that already exists.
+    private static SqliteConnection OpenDatabase(string path, bool readOnly)
+    {
+        // AUDIT: file read/write. Opens the moved billament.db to read the two folder settings, and to change them only when one points inside the old data folder; never creates a file.
+        var c = new SqliteConnection(new SqliteConnectionStringBuilder
+        {
+            DataSource = path,
+            Mode = readOnly ? SqliteOpenMode.ReadOnly : SqliteOpenMode.ReadWrite,
+            Pooling = false,
+        }.ToString());
+        c.Open();
+        return c;
+    }
 
     // The state of a pair when no move is needed, or null when the old folder is there and the new name is free.
     private static FolderMove? Decide(string oldFolder, string newFolder)
