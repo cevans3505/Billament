@@ -38,7 +38,7 @@ All decisions below were given by the user before discussion and are locked.
 - **D-03:** Use `git mv` for file and folder renames so history follows the files.
 
 ### Placement and version
-- **D-04:** This is Phase 3, the next phase, before Data Safety Fixes (now Phase 4) and Slice File Submissions (now
+- **D-04 [informational]:** Already done by the roadmap change (no plan task needed). This is Phase 3, the next phase, before Data Safety Fixes (now Phase 4) and Slice File Submissions (now
   Phase 5), so later phases are written under the new name from the start.
 - **D-05:** Ships as **4.0.0**: `<Version>4.0.0</Version>` in `src/Billament.App/Billament.App.csproj`, and the
   heading of `packaging/Read me.txt` becomes `Billament 4.0`. The release workflow's heading check looks for

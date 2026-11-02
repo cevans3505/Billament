@@ -16,7 +16,7 @@
     {
       "number": "3",
       "name": "Rename to Billament",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "number": "4",
@@ -30,9 +30,9 @@
     }
   ],
   "next": {
-    "command": "/gsd-progress",
-    "label": "Show progress",
-    "reason": "Unsure of state — showing progress"
+    "command": "/gsd-progress --next",
+    "label": "Advance to the next step",
+    "reason": "Phase 3 of 5 · 40% · executing"
   },
-  "updated_at": "2026-11-02T03:16:54.839Z"
+  "updated_at": "2026-11-02T04:34:32.042Z"
 }
