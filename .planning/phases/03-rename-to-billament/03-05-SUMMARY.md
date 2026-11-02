@@ -15,7 +15,7 @@ affects: [03-06]
 plan_head_before: 264738c
 plan_head_after: ec65be8
 
-status: task-1-done, task-2-pending
+status: complete
 ---
 
 # 03-05 Summary: Windows checks
@@ -50,8 +50,20 @@ opened, a daily backup, a main window), but it became harmful once start-up move
   and an `update-check.json`. With the user's OK these were moved aside (not deleted) to the session scratchpad.
 - The plan's "first start on your own data" step has effectively happened (with the safety copy made by the move).
 
-## Task 2: upgrade test on a copy (pending, user)
+## Task 2: upgrade test in Windows Sandbox (done, 2026-11-02)
 
-Windows Sandbox is not turned on on this PC, so cases A to D (and optional E) need Sandbox turned on in Windows
-Features, or a second Windows account. Inputs: `publish\Billament.exe`, `PrintInvoicer-3.7.0.zip` from the 3.7.0
-release, and a copy of 3.7.0 data (for example the `pre-rename` safety copy renamed to `printinvoicer.db`).
+Run automatically in Windows Sandbox (networking off) by a script that started the programs, read every Billament and
+PrintInvoicer window through UI Automation, took screenshots and recorded MD5 lists of both data folders after each
+step. Inputs: `publish\Billament.exe`, `PrintInvoicer.exe` from the published 3.7.0 zip, and a copy of the developer's
+3.7.0 data (the `pre-rename` copy as `printinvoicer.db`: 7 jobs, all finalized, $370.66) with "Back up to" set to
+`Documents\PrintInvoicer\My backups`, the invoice folder set to `Documents\PrintInvoicer\Invoices 2026`, two old daily
+backups and one old manual backup.
+
+| Case | Result |
+|------|--------|
+| A: 3.7.0 open | Pass. Billament showed "Billament could not move your data from ...\Documents\PrintInvoicer to ...\Documents\Billament, so it has closed. Nothing was lost: your data is still in ...\Documents\PrintInvoicer. Close PrintInvoicer and any other program that may be using that folder, such as a sync app, and start Billament again." plus the error file path. `Documents\Billament` was not created; `Documents\PrintInvoicer` was unchanged apart from `Backups\billament-...-pre-rename.db` (and 3.7.0's own daily backup). `%LOCALAPPDATA%` moved first, as designed. RESEARCH A4 holds: a running 3.7.0 blocks the folder move. |
+| B: real move | Pass. No message; window title Billament; 7 jobs, "Invoiced, unpaid $370.66", every job total the same as in 3.7.0 ($70.96, $78.50, $16.90, $39.20, $55.80, $65.00, $44.30). `Documents\PrintInvoicer` gone; `billament.db` and `Backups\billament-...-pre-rename.db` exist. `billament.db` equals the original in every table except the two folder settings. |
+| C: settings and old backups | Pass for the data: "Back up to" became `Documents\Billament\My backups` and the invoice folder `Documents\Billament\Invoices 2026`; the old `printinvoicer-*.db` daily and manual backups moved along. Not clicked through: Back up now, the restore picker and the D-25 restore in the UI (covered by `BackupTests` and `DataFolderMigrationTests`). |
+| D: second start | Pass. No message; nothing moved; the only changed file is `window-layout.json` (window position saved on close). |
+| E: empty Documents\Billament | Pass. Information message: "Billament found your data from PrintInvoicer in ...\Documents\PrintInvoicer, but a folder named ...\Documents\Billament already exists, so nothing was moved ..." with how to use the old data. Documents untouched; `%LOCALAPPDATA%` moved, as designed. |
+| Own data | Moved by the test-run start-up described above; `billament.db` matches its pre-rename copy apart from the invoice folder setting. |
