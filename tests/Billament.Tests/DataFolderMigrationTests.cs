@@ -381,6 +381,7 @@ public sealed class DataFolderMigrationTests : IDisposable
         Assert.True(result.DocumentsFailed);
         Assert.Contains($"your data is now in {Folders.NewDocuments}", result.Problem);
         Assert.DoesNotContain("still in", result.Problem);
+        Assert.NotNull(result.BackupPath);
         Assert.Equal(Path.Combine(Folders.NewDocuments, "Backups", Path.GetFileName(result.BackupPath)), result.BackupPath);
         Assert.True(File.Exists(result.BackupPath));
         Assert.True(File.Exists(Path.Combine(Folders.NewDocuments, DataFolders.OldDatabaseName)));
