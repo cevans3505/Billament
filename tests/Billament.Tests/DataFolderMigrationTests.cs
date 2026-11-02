@@ -294,6 +294,59 @@ public sealed class DataFolderMigrationTests : IDisposable
         Assert.False(Directory.Exists(Folders.NewLocal));
     }
 
+    [Theory]
+    [InlineData("-journal")]
+    [InlineData("-wal")]
+    [InlineData("-shm")]
+    public void A_journal_left_by_a_crash_stops_the_move_with_a_plain_message(string suffix)
+    {
+        // What a crash in the middle of a save leaves next to the database.
+        CreateOldData();
+        File.WriteAllBytes(OldDb + suffix, [1, 2, 3]);
+        var oldDocs = Tree(Folders.OldDocuments);
+        var oldLocal = Tree(Folders.OldLocal);
+
+        var result = DataFolderMigration.Run(Folders, Now);
+
+        Assert.True(result.DocumentsFailed);
+        Assert.Equal(FolderMove.NotTried, result.Local);
+        Assert.Null(result.BackupPath);
+        Assert.Contains(DataFolders.OldDatabaseName + suffix, result.Problem);
+        Assert.Contains("did not close normally", result.Problem);
+        Assert.Contains("Nothing was lost", result.Problem);
+        Assert.Contains(Folders.OldDocuments, result.Problem);
+        Assert.DoesNotContain("sync app", result.Problem);
+        Assert.Equal(oldDocs, Tree(Folders.OldDocuments));
+        Assert.Equal(oldLocal, Tree(Folders.OldLocal));
+        Assert.False(Directory.Exists(Folders.NewDocuments));
+        Assert.False(Directory.Exists(Folders.NewLocal));
+
+        // Once the old version has closed normally, the journal is gone and the move goes ahead.
+        File.Delete(OldDb + suffix);
+        var later = DataFolderMigration.Run(Folders, Now.AddMinutes(1));
+        Assert.Equal(FolderMove.Moved, later.Documents);
+        Assert.True(File.Exists(NewDb));
+    }
+
+    [Fact]
+    public void A_journal_next_to_a_half_finished_move_stops_the_finishing_start()
+    {
+        CreateOldData();
+        var stuck = FailWhenMoving(Folders.NewDocuments) with { MoveFile = FileInUse };
+        Assert.True(DataFolderMigration.Run(Folders, Now, stuck).DocumentsFailed);
+        string movedOld = Path.Combine(Folders.NewDocuments, DataFolders.OldDatabaseName);
+        File.WriteAllBytes(movedOld + "-journal", [1, 2, 3]);
+        var before = Tree(Folders.NewDocuments);
+
+        var result = DataFolderMigration.Run(Folders, Now.AddMinutes(1));
+
+        Assert.True(result.DocumentsFailed);
+        Assert.Contains(Folders.NewDocuments, result.Problem);
+        Assert.Contains("Nothing was lost", result.Problem);
+        Assert.Equal(before, Tree(Folders.NewDocuments));
+        Assert.False(File.Exists(NewDb));
+    }
+
     [Fact]
     public void Failed_folder_move_leaves_old_data_and_creates_no_new_folder()
     {

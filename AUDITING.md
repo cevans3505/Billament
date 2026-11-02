@@ -88,7 +88,7 @@ README pictures, are listed under [Building and releasing](#building-and-releasi
 | Sliced files the user chooses or drags in (`.gcode.3mf`, `.gcode`, `.goo`), opened read-only | `BambuFileReader`, `GooFileReader` |
 | The original sliced file again, read-only, to get a sharper plate picture for an invoice | `BambuFileReader.ReadPlateImage` |
 | Its own database, backups (when restoring), and the small JSON files above | `Database`, `DatabaseBackup`, `UpdateService`, `WindowLayout` |
-| Whether the old and new data folders and database files exist (names only, no contents), before the one-time move | `DataFolderMigration.Run` |
+| Whether the old and new data folders and database files exist, and whether SQLite journal files (`-journal`, `-wal`, `-shm`) are next to the old database (names only, no contents), before the one-time move | `DataFolderMigration.Run` |
 
 The file readers treat every file as untrusted. They never run anything from a file. The XML parser has DTDs and
 external references switched off, every size is capped, and every number is range-checked (limits in

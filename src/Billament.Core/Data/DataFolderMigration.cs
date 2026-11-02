@@ -133,6 +133,26 @@ public static class DataFolderMigration
                 $"{folders.NewDocuments}, and start Billament again.";
         }
 
+        // A journal file next to the old database means PrintInvoicer did not close normally, and SQLite still has to
+        // finish or undo a write. SQLite finds that file by the database's name, so renaming the database would lose
+        // it, and the read-only safety copy cannot finish it either. Stop before anything is copied or moved.
+        if (documents is null && FileExists(oldDb) && Leftover(oldDb) is { } journal)
+        {
+            string message = $"Billament found the file {Path.GetFileName(journal)} next to your data in {folders.OldDocuments}. " +
+                $"It means {DataFolders.OldName} is still open or did not close normally last time, so Billament did not move anything and " +
+                $"has closed. Nothing was lost: your data is still in {folders.OldDocuments}. Do not delete that file. " +
+                $"Start {DataFolders.OldName} once, close it normally, and then start Billament again.";
+            return new DataMoveResult(FolderMove.Failed, local ?? FolderMove.NotTried, null, message, null, null);
+        }
+        if (repair && Leftover(movedOldDb) is { } movedJournal)
+        {
+            string message = $"Billament could not finish setting up your data in {folders.NewDocuments}, because the file " +
+                $"{Path.GetFileName(movedJournal)} is next to {DataFolders.OldDatabaseName} there, which means that database " +
+                "was not closed normally. Billament changed nothing and has closed. Nothing was lost: your data is in that " +
+                "folder. Do not delete or rename any file in it, and ask for help on Billament's GitHub issue page.";
+            return new DataMoveResult(FolderMove.Failed, local ?? FolderMove.NotTried, null, message, null, null);
+        }
+
         // The safety copy comes first, so a move that goes wrong later still leaves a good copy of the data.
         string? backup = null;
         if (documents is null && FileExists(oldDb))
@@ -386,6 +406,10 @@ public static class DataFolderMigration
         // AUDIT: folder check. Whether a folder, file or link already has this name; reads no contents.
         return Path.Exists(path) || new FileInfo(path).LinkTarget is not null;
     }
+
+    // The first SQLite journal file left next to a database (rollback journal or write-ahead log), or null.
+    private static string? Leftover(string databasePath) =>
+        new[] { "-journal", "-wal", "-shm" }.Select(suffix => databasePath + suffix).FirstOrDefault(FileExists);
 
     // Whether an old data folder exists.
     private static bool FolderExists(string path)
