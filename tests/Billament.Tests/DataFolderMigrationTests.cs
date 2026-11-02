@@ -152,4 +152,282 @@ public sealed class DataFolderMigrationTests : IDisposable
         Assert.Equal(DataFolders.NewName, Path.GetFileName(Path.GetDirectoryName(Database.DefaultPath)));
         Assert.Equal(DataFolders.NewDatabaseName, Path.GetFileName(Database.DefaultPath));
     }
+
+    // Moves folders for real, except that moving the folder named here fails the way a folder held open by another
+    // program does. Root ignores permission bits, so failures come through this seam rather than through chmod.
+    private static FileOps FailWhenMoving(string source) => new(MoveDirectory: (from, to) =>
+    {
+        if (from == source) throw new IOException("The folder is in use.");
+        Directory.Move(from, to);
+    });
+
+    // A file move that always fails, as when another program holds the database file.
+    private static void FileInUse(string from, string to) => throw new IOException("The file is in use.");
+
+    [Fact]
+    public void Leaves_old_folders_alone_when_the_new_ones_exist()
+    {
+        CreateOldData();
+        Directory.CreateDirectory(Folders.NewDocuments);
+        File.WriteAllBytes(NewDb, [1, 1, 1]);
+        Directory.CreateDirectory(Folders.NewLocal);
+        File.WriteAllText(Path.Combine(Folders.NewLocal, "window-layout.json"), "{\"new\":1}");
+        var oldDocs = Tree(Folders.OldDocuments);
+        var oldLocal = Tree(Folders.OldLocal);
+        var newDocs = Tree(Folders.NewDocuments);
+        var newLocal = Tree(Folders.NewLocal);
+
+        var result = DataFolderMigration.Run(Folders, Now);
+
+        Assert.Equal(FolderMove.NewFolderExists, result.Documents);
+        Assert.Equal(FolderMove.NewFolderExists, result.Local);
+        Assert.Null(result.Notice);
+        Assert.Null(result.Problem);
+        Assert.Null(result.BackupPath);
+        Assert.Equal(oldDocs, Tree(Folders.OldDocuments));
+        Assert.Equal(oldLocal, Tree(Folders.OldLocal));
+        Assert.Equal(newDocs, Tree(Folders.NewDocuments));
+        Assert.Equal(newLocal, Tree(Folders.NewLocal));
+        Assert.Empty(Directory.GetFiles(_root, "*pre-rename*", SearchOption.AllDirectories));
+    }
+
+    [Fact]
+    public void Tells_you_when_an_unrelated_new_folder_blocks_the_move()
+    {
+        CreateOldData();
+        Directory.CreateDirectory(Folders.NewDocuments);
+        var oldDocs = Tree(Folders.OldDocuments);
+
+        var result = DataFolderMigration.Run(Folders, Now);
+
+        Assert.Equal(FolderMove.NewFolderExists, result.Documents);
+        Assert.Equal(oldDocs, Tree(Folders.OldDocuments));
+        Assert.Empty(Tree(Folders.NewDocuments));
+        Assert.NotNull(result.Notice);
+        Assert.Contains(Folders.OldDocuments, result.Notice);
+        Assert.Contains(Folders.NewDocuments, result.Notice);
+    }
+
+    [Fact]
+    public void Each_pair_follows_its_own_rule()
+    {
+        CreateOldData();
+        Directory.CreateDirectory(Folders.NewLocal);
+        var oldLocal = Tree(Folders.OldLocal);
+
+        var result = DataFolderMigration.Run(Folders, Now);
+
+        Assert.Equal(FolderMove.Moved, result.Documents);
+        Assert.Equal(FolderMove.NewFolderExists, result.Local);
+        Assert.Equal(oldLocal, Tree(Folders.OldLocal));
+        Assert.True(File.Exists(NewDb));
+    }
+
+    [Fact]
+    public void Nothing_to_move_creates_nothing()
+    {
+        var result = DataFolderMigration.Run(Folders, Now);
+
+        Assert.Equal(FolderMove.NothingToMove, result.Documents);
+        Assert.Equal(FolderMove.NothingToMove, result.Local);
+        Assert.Null(result.BackupPath);
+        Assert.Empty(Directory.GetFileSystemEntries(Docs));
+        Assert.Empty(Directory.GetFileSystemEntries(Local));
+    }
+
+    [Fact]
+    public void A_file_with_the_new_name_counts_as_taken()
+    {
+        CreateOldData();
+        File.WriteAllText(Folders.NewDocuments, "not a folder");
+        var oldDocs = Tree(Folders.OldDocuments);
+
+        var result = DataFolderMigration.Run(Folders, Now);
+
+        Assert.Equal(FolderMove.NewFolderExists, result.Documents);
+        Assert.Equal(oldDocs, Tree(Folders.OldDocuments));
+        Assert.True(File.Exists(Folders.NewDocuments));
+    }
+
+    [Fact]
+    public void A_dangling_link_with_the_new_name_counts_as_taken()
+    {
+        CreateOldData();
+        try
+        {
+            Directory.CreateSymbolicLink(Folders.NewDocuments, Path.Combine(_root, "missing"));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Windows without the symbolic link privilege cannot make the link, so there is nothing to check there.
+            // Linux and the GitHub runner always run this fact.
+            return;
+        }
+        var oldDocs = Tree(Folders.OldDocuments);
+
+        var result = DataFolderMigration.Run(Folders, Now);
+
+        Assert.Equal(FolderMove.NewFolderExists, result.Documents);
+        Assert.Equal(oldDocs, Tree(Folders.OldDocuments));
+        Assert.NotNull(new FileInfo(Folders.NewDocuments).LinkTarget);
+    }
+
+    [Fact]
+    public void Failed_backup_moves_nothing()
+    {
+        CreateOldData(withDatabase: false);
+        File.WriteAllText(OldDb, string.Concat(Enumerable.Repeat("this is plain text, not a database. ", 100)));
+        var oldDocs = Tree(Folders.OldDocuments);
+        var oldLocal = Tree(Folders.OldLocal);
+
+        var result = DataFolderMigration.Run(Folders, Now);
+
+        Assert.Equal(FolderMove.Failed, result.Documents);
+        Assert.Equal(FolderMove.NotTried, result.Local);
+        Assert.True(result.DocumentsFailed);
+        Assert.Contains(Folders.OldDocuments, result.Problem);
+        Assert.Contains("Nothing was lost", result.Problem);
+        Assert.IsType<SqliteException>(result.Error);
+        Assert.Equal(oldDocs, Tree(Folders.OldDocuments));
+        Assert.Equal(oldLocal, Tree(Folders.OldLocal));
+        Assert.False(Directory.Exists(Folders.NewDocuments));
+        Assert.False(Directory.Exists(Folders.NewLocal));
+    }
+
+    [Fact]
+    public void Failed_folder_move_leaves_old_data_and_creates_no_new_folder()
+    {
+        CreateOldData();
+        var bytes = File.ReadAllBytes(OldDb);
+
+        var result = DataFolderMigration.Run(Folders, Now, FailWhenMoving(Folders.OldDocuments));
+
+        Assert.Equal(FolderMove.Failed, result.Documents);
+        Assert.Equal(FolderMove.Moved, result.Local);
+        Assert.Contains(Folders.OldDocuments, result.Problem);
+        Assert.Contains("Nothing was lost", result.Problem);
+        Assert.Equal(bytes, File.ReadAllBytes(OldDb));
+        Assert.False(Directory.Exists(Folders.NewDocuments));
+        Assert.StartsWith(Path.Combine(Folders.OldDocuments, "Backups"), result.BackupPath);
+        Assert.True(File.Exists(result.BackupPath));
+    }
+
+    [Fact]
+    public void A_failed_local_move_is_not_a_failure()
+    {
+        CreateOldData();
+
+        var result = DataFolderMigration.Run(Folders, Now, FailWhenMoving(Folders.OldLocal));
+
+        Assert.Equal(FolderMove.Moved, result.Documents);
+        Assert.Equal(FolderMove.Failed, result.Local);
+        Assert.False(result.DocumentsFailed);
+        Assert.Null(result.Problem);
+        Assert.Null(result.Notice);
+        Assert.NotNull(result.Error);
+        Assert.True(Directory.Exists(Folders.OldLocal));
+        Assert.True(File.Exists(NewDb));
+    }
+
+    [Fact]
+    public void A_failed_rename_moves_the_folder_back()
+    {
+        CreateOldData();
+        var bytes = File.ReadAllBytes(OldDb);
+
+        var result = DataFolderMigration.Run(Folders, Now, new FileOps(MoveFile: FileInUse));
+
+        Assert.Equal(FolderMove.Failed, result.Documents);
+        Assert.True(File.Exists(OldDb));
+        Assert.Equal(bytes, File.ReadAllBytes(OldDb));
+        Assert.False(Directory.Exists(Folders.NewDocuments));
+        Assert.Contains(Folders.OldDocuments, result.Problem);
+        Assert.Contains("Nothing was lost", result.Problem);
+        Assert.IsType<IOException>(result.Error);
+    }
+
+    [Fact]
+    public void When_the_move_back_also_fails_the_next_start_finishes_it()
+    {
+        CreateOldData();
+        var before = Frozen(OldDb);
+        var stuck = FailWhenMoving(Folders.NewDocuments) with { MoveFile = FileInUse };
+
+        var first = DataFolderMigration.Run(Folders, Now, stuck);
+
+        Assert.Equal(FolderMove.Failed, first.Documents);
+        Assert.Contains(Folders.NewDocuments, first.Problem);
+        Assert.True(File.Exists(Path.Combine(Folders.NewDocuments, DataFolders.OldDatabaseName)));
+
+        var second = DataFolderMigration.Run(Folders, Now.AddMinutes(1));
+
+        Assert.Equal(FolderMove.Moved, second.Documents);
+        Assert.Equal(FolderMove.NothingToMove, second.Local);
+        Assert.True(File.Exists(NewDb));
+        Assert.False(File.Exists(Path.Combine(Folders.NewDocuments, DataFolders.OldDatabaseName)));
+        Assert.Equal(before, Frozen(NewDb));
+    }
+
+    [Fact]
+    public void Two_database_files_are_both_kept()
+    {
+        CreateOldData();
+        var oldBytes = File.ReadAllBytes(OldDb);
+        File.WriteAllBytes(Path.Combine(Folders.OldDocuments, DataFolders.NewDatabaseName), [9, 9, 9]);
+
+        var result = DataFolderMigration.Run(Folders, Now);
+
+        Assert.Equal(FolderMove.Moved, result.Documents);
+        Assert.Equal(oldBytes, File.ReadAllBytes(Path.Combine(Folders.NewDocuments, DataFolders.OldDatabaseName)));
+        Assert.Equal(new byte[] { 9, 9, 9 }, File.ReadAllBytes(NewDb));
+        Assert.NotNull(result.Notice);
+        Assert.Contains(DataFolders.OldDatabaseName, result.Notice);
+        Assert.Contains(DataFolders.NewDatabaseName, result.Notice);
+    }
+
+    [Fact]
+    public void An_old_folder_without_a_database_moves_without_a_backup()
+    {
+        Directory.CreateDirectory(Folders.OldDocuments);
+        File.WriteAllText(Path.Combine(Folders.OldDocuments, "note.txt"), "sample");
+
+        var result = DataFolderMigration.Run(Folders, Now);
+
+        Assert.Equal(FolderMove.Moved, result.Documents);
+        Assert.Null(result.BackupPath);
+        Assert.True(File.Exists(Path.Combine(Folders.NewDocuments, "note.txt")));
+        Assert.False(Directory.Exists(Path.Combine(Folders.NewDocuments, "Backups")));
+    }
+
+    [Fact]
+    public void Runs_only_once()
+    {
+        CreateOldData();
+        DataFolderMigration.Run(Folders, Now);
+        var newDocs = Tree(Folders.NewDocuments);
+        var newLocal = Tree(Folders.NewLocal);
+
+        var again = DataFolderMigration.Run(Folders, Now.AddHours(1));
+
+        Assert.Equal(FolderMove.NothingToMove, again.Documents);
+        Assert.Equal(FolderMove.NothingToMove, again.Local);
+        Assert.Null(again.BackupPath);
+        Assert.Equal(newDocs, Tree(Folders.NewDocuments));
+        Assert.Equal(newLocal, Tree(Folders.NewLocal));
+    }
+
+    [Fact]
+    public void A_later_start_succeeds_after_a_failed_one()
+    {
+        CreateOldData();
+
+        var failed = DataFolderMigration.Run(Folders, Now, FailWhenMoving(Folders.OldDocuments));
+        Assert.True(failed.DocumentsFailed);
+
+        var later = DataFolderMigration.Run(Folders, Now.AddMinutes(5));
+
+        Assert.Equal(FolderMove.Moved, later.Documents);
+        Assert.True(File.Exists(NewDb));
+        Assert.False(Directory.Exists(Folders.OldDocuments));
+    }
 }
