@@ -98,7 +98,7 @@ To check for yourself, search `src` for: `Registry`, `DllImport`, `LibraryImport
 | Package | Version | Used for |
 | --- | --- | --- |
 | Microsoft.Data.Sqlite | 10.0.14 | The SQLite database (includes the native SQLite engine via SQLitePCLRaw) |
-| QuestPDF | 2026.9.1 | Laying out and rendering the PDF invoices (Community license; includes native Skia and qpdf libraries) |
+| QuestPDF | 2026.9.1 | Laying out and rendering the PDF invoices (Community license, set by `QuestPDF.Settings.License` in `App.xaml.cs`: for individuals and businesses only with annual gross revenue under USD 1,000,000, and not for public-sector entities or publicly traded companies; see the License section of the README; includes native Skia and qpdf libraries) |
 | CommunityToolkit.Mvvm | 8.4.2 | Wiring the windows to their logic (source generators; no I/O of its own) |
 
 Plus .NET 10 and WPF from Microsoft. The test projects use xUnit; tests are not part of the released program.

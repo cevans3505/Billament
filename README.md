@@ -258,3 +258,15 @@ If a draft for the tag already exists, delete the draft first; the workflow will
 ## License
 
 MIT. See [LICENSE](LICENSE).
+The MIT license covers PrintInvoicer's own code.
+
+The invoices are laid out with [QuestPDF](https://www.questpdf.com/), which PrintInvoicer uses under QuestPDF's free
+Community license (set in `src/PrintInvoicer.App/App.xaml.cs`). Whether you may use it that way is decided by QuestPDF's
+terms, not by this project. As stated on [QuestPDF's license page](https://www.questpdf.com/license/community.html) when
+this was written (November 2026, Community License version 3.0, effective 6 July 2026), individuals and businesses can
+use the Community license only with annual gross revenue under USD 1,000,000 (an organization counts the revenue of
+every entity under common control), and public-sector entities and publicly traded companies may not use it whatever
+their revenue. QuestPDF also lists a few other eligible groups, such as charities, academic institutions and eligible
+open-source projects; read its page to see whether one fits you. If you or your business do not qualify, you need a
+paid QuestPDF license; QuestPDF allows 90 days to switch after you stop qualifying. This is not legal advice: check
+QuestPDF's current terms before relying on it.
