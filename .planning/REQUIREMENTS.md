@@ -13,6 +13,17 @@
 - [x] **SHOW-04**: A maintainer can regenerate all README images with one command that renders offscreen (no window shown) from seeded sample data with no personal data
 - [x] **SHOW-05**: The README explains how to regenerate the images
 
+### Rename to Billament
+
+- [ ] **NAME-01**: The code base is named Billament: `Billament.sln`, project files, folders and namespaces `Billament.Core`, `Billament.App`, `Billament.Tests` and `Billament.UiTests`, `InternalsVisibleTo("Billament.UiTests")`, assembly and exe `Billament.exe`, and the icon file
+- [ ] **NAME-02**: Everything the user sees says Billament: window titles, dialogs, the update bar, the error report, PDF text, PDF file names and metadata, and temporary folder names
+- [ ] **NAME-03**: On first start, if only the old folders exist (`Documents\PrintInvoicer`, `%LOCALAPPDATA%\PrintInvoicer`), the app makes a backup and then moves them once to `Documents\Billament` (database renamed to `billament.db`) and `%LOCALAPPDATA%\Billament`; the old folders are never touched when the new ones exist; a failure shows a plain message and leaves the old data in place; finalized invoice totals are unchanged; the logic is in Core with tests that run on Linux; every new file or folder access has an `// AUDIT:` comment and an AUDITING.md row
+- [ ] **NAME-04**: A custom backup or invoice folder setting that points inside the old data folder still finds its files after the move, and daily backups made under the old name can still be listed, restored and pruned
+- [ ] **NAME-05**: The update check (`UpdateService.Repository`), its allow-check, the error report's issue page, README and docs links point at `cevans3505/Billament`, and a 3.7.0 install still finds the 4.0.0 release through GitHub's redirect after the repository is renamed
+- [ ] **NAME-06**: Build, install and release scripts use the new name: `publish.ps1` (install folder, Start menu shortcut, removing the old PrintInvoicer shortcut and install folder), `make-readme-images.ps1`, `tools/Make-Icon.ps1`, `ci.yml` and `release.yml` (`Billament-<version>.zip`, checksum file, read-me heading check, release title)
+- [ ] **NAME-07**: Docs use the new name: README (with the README pictures regenerated where they show the name), AUDITING.md, CLAUDE.md, `.claude/CLAUDE.md`, `packaging/Read me.txt` (heading "Billament 4.0" and a note about the data move), and `.planning/codebase` where the old name would mislead; historical `.planning` phase files are left alone
+- [ ] **NAME-08**: The app ships as version 4.0.0, and a case-insensitive search for "PrintInvoicer" in the repository finds only deliberate hits (the migration's old folder and file names, history, the changelog)
+
 ### Slice File Submissions
 
 - [ ] **SUBM-01**: A user can open a GitHub issue form to request support for an unsupported printer or slicer, giving printer make, model and type (FDM / resin), slicer name and version, and attaching slice files
@@ -86,24 +97,32 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FIX-05 | Phase 2 | Complete |
 | FIX-06 | Phase 2 | Complete |
 | FIX-07 | Phase 2 | Complete |
-| FIX-08 | Phase 3 | Pending |
-| FIX-09 | Phase 3 | Pending |
-| FIX-10 | Phase 3 | Pending |
-| FIX-11 | Phase 3 | Pending |
-| FIX-12 | Phase 3 | Pending |
-| SUBM-01 | Phase 4 | Pending |
-| SUBM-02 | Phase 4 | Pending |
-| SUBM-03 | Phase 4 | Pending |
-| SUBM-04 | Phase 4 | Pending |
-| SUBM-05 | Phase 4 | Pending |
-| SUBM-06 | Phase 4 | Pending |
+| NAME-01 | Phase 3 | Pending |
+| NAME-02 | Phase 3 | Pending |
+| NAME-03 | Phase 3 | Pending |
+| NAME-04 | Phase 3 | Pending |
+| NAME-05 | Phase 3 | Pending |
+| NAME-06 | Phase 3 | Pending |
+| NAME-07 | Phase 3 | Pending |
+| NAME-08 | Phase 3 | Pending |
+| FIX-08 | Phase 4 | Pending |
+| FIX-09 | Phase 4 | Pending |
+| FIX-10 | Phase 4 | Pending |
+| FIX-11 | Phase 4 | Pending |
+| FIX-12 | Phase 4 | Pending |
+| SUBM-01 | Phase 5 | Pending |
+| SUBM-02 | Phase 5 | Pending |
+| SUBM-03 | Phase 5 | Pending |
+| SUBM-04 | Phase 5 | Pending |
+| SUBM-05 | Phase 5 | Pending |
+| SUBM-06 | Phase 5 | Pending |
 
 **Coverage:**
-- v1 requirements: 24 total
-- Mapped to phases: 24
+- v1 requirements: 32 total
+- Mapped to phases: 32
 - Complete: 13 (SHOW-01 to SHOW-05, TRIA-01, FIX-01 to FIX-07)
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-11-01*
-*Last updated: 2026-11-02 after Phase 2 review fixes (FIX-03 wording, coverage count)*
+*Last updated: 2026-11-02 after adding Phase 3 (rename to Billament, NAME-01 to NAME-08); fix and submission phases renumbered to 4 and 5*

@@ -15,19 +15,24 @@
     },
     {
       "number": "3",
-      "name": "Data Safety Fixes",
+      "name": "Rename to Billament",
       "status": "pending"
     },
     {
       "number": "4",
+      "name": "Data Safety Fixes",
+      "status": "pending"
+    },
+    {
+      "number": "5",
       "name": "Slice File Submissions",
       "status": "pending"
     }
   ],
   "next": {
-    "command": "/gsd-progress --next",
-    "label": "Advance to the next step (plan phase 3)",
-    "reason": "Phase 3 of 4 — needs a plan"
+    "command": "/gsd-progress",
+    "label": "Show progress",
+    "reason": "Unsure of state — showing progress"
   },
-  "updated_at": "2026-11-02T02:48:12.883Z"
+  "updated_at": "2026-11-02T03:16:54.839Z"
 }

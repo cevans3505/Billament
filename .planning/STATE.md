@@ -1,19 +1,19 @@
 ---
 gsd_state_version: "1.0"
 current_phase: 3
-current_phase_name: Data Safety Fixes
-status: planning
-stopped_at: Phase 02 complete, ready to plan Phase 3
-last_updated: "2026-11-02T02:48:12.834Z"
+current_phase_name: Rename to Billament
+status: Ready to discuss
+stopped_at: Phase 3 (Rename to Billament) added, ready to discuss and plan
+last_updated: "2026-11-02T03:16:41.838Z"
 last_activity: 2026-11-02
-last_activity_desc: Phase 02 complete, transitioned to Phase 3
-state_head: 8b9542187291a98e1c04d05f7b6762e4e6a61c54
+state_head: 68dd742f714e686925e0e5ca4cb41a66f8defff5
 progress:
-  total_phases: 4
+  total_phases: 5
   completed_phases: 2
   total_plans: 6
   completed_plans: 6
-  percent: 50
+  percent: 40
+last_activity_desc: Phase 3 (Rename to Billament) inserted; later phases renumbered
 ---
 
 # Project State
@@ -23,16 +23,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-02)
 
 **Core value:** Prices and invoices stay correct and trustworthy: a finalized invoice never changes, and totals match what the slice file and price book say.
-**Current focus:** Phase 3: Data Safety Fixes
+**Current focus:** Phase 3: Rename to Billament
 
 ## Current Position
 
-Phase: 3 — Data Safety Fixes
+Phase: 3 (Rename to Billament)
 Plan: Not started
-Status: Ready to plan
-Last activity: 2026-11-01 — Phase 02 complete, transitioned to Phase 3
+Status: Ready to discuss
+Last activity: 2026-11-02
 
-Progress: [█████░░░░░] 50%
+Progress: [████░░░░░░] 40%
 
 ## Performance Metrics
 
@@ -70,10 +70,11 @@ Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
 - [Roadmap]: Four phases in the user's order: README images, fixes scored 2.0 and above, fixes scored 1.5, slice file submissions
+- [Roadmap]: Rename to Billament inserted as Phase 3 (user asked for an integer phase); Data Safety Fixes is now Phase 4 and Slice File Submissions Phase 5
 - [Roadmap]: TRIA-01 is already done (CONCERNS-TRIAGE.md committed) and is mapped to Phase 2 as Complete
 - [Roadmap]: FIX-01 to FIX-12 stay in triage score order across Phases 2 and 3
 - [Roadmap]: FIX-08 (freeze once) sits after FIX-02 (legacy-database test) so the test guards the change
-- [Phase 02]: 02-01: legacy freeze runs under pricing rules v2; fixture values give same cents under v1; Phase 3 FIX-08 must keep frozen totals
+- [Phase 02]: 02-01: legacy freeze runs under pricing rules v2; fixture values give same cents under v1; Phase 4 FIX-08 must keep frozen totals
 - [Phase 02]: 02-02: README license text lists QuestPDF's other eligible groups (charities, academic, open-source) because the live page says so
 - [Phase 02]: 02-03: JsonException from a damaged GitHub reply is not wrapped in InvalidDataException (the file-reader rule is about files); over-cap update reply is treated as no update info like a 404
 - [Phase 02]: 02-03: a .partial backup file left by a killed process is not swept; AUDITING.md says so
@@ -86,11 +87,15 @@ None yet.
 
 ### Blockers/Concerns
 
-- [Phase 3]: Triage costs are estimates from the map. Check the code first and re-score any item already handled.
-- [Phase 3]: Every fix must keep finalized totals unchanged and follow the AUDIT, schema and untrusted-file rules in CLAUDE.md.
+- [Phase 4]: Triage costs are estimates from the map. Check the code first and re-score any item already handled.
+- [Phase 4]: Every fix must keep finalized totals unchanged and follow the AUDIT, schema and untrusted-file rules in CLAUDE.md.
 - [Phase 2]: Open review findings carried forward: WR-04 (Settings folder typos reach the error report), WR-02 (some old titles get new PDF names), IN-01 to IN-04, IN-06. See 02-REVIEW-DISPOSITION.md.
 - [Phase 2]: Release 3.7.0 must show the .zip.sha256 file and the SHA-256 line (02-UAT.md test 5).
-- [Phase 4]: GitHub attachments may not accept .3mf or .goo directly; confirm whether zipping is needed during planning.
+- [Phase 5]: GitHub attachments may not accept .3mf or .goo directly; confirm whether zipping is needed during planning.
+
+### Roadmap Evolution
+
+- Phase 3 inserted after Phase 2: Rename to Billament (4.0.0); Data Safety Fixes renumbered 3 to 4, Slice File Submissions 4 to 5
 
 ## Deferred Items
 
@@ -103,5 +108,5 @@ Items acknowledged and deferred at milestone close, most recent first:
 ## Session Continuity
 
 Last session: 2026-11-02T01:37:17.727Z
-Stopped at: Phase 02 complete, ready to plan Phase 3
+Stopped at: Phase 3 (Rename to Billament) added, ready to discuss and plan
 Resume file: None

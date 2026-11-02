@@ -68,7 +68,7 @@ were partly handled, so their notes say what is left.
 | C14 | Yes | Wider than described: only the job title is cleaned, with the operating system's list of bad characters (on Linux only two characters); the invoice number, which the user can type, is not cleaned at all, and there is no length limit. | 2.00 (unchanged) | Fix in Phase 2 (plan 02-04). |
 | C22 | Yes | The README says nothing about QuestPDF's license (the concern text says it lists "Community license"; it does not), and AUDITING.md names the license without its condition. | 2.00 (unchanged) | Fix in Phase 2 (plan 02-02). |
 
-**Note for C01 (Phase 3, FIX-08):** the one-time freeze gives an invoice finalized before snapshots existed today's
+**Note for C01 (Phase 4, FIX-08; was Phase 3 before the Billament rename phase was inserted):** the one-time freeze gives an invoice finalized before snapshots existed today's
 prices under the current pricing rules (version 2), even if it was first sent under version 1 rules (up to 3.4). The
 Phase 2 legacy-database test uses values where both versions give the same cents, so it does not pin that behavior.
 FIX-08 must keep the frozen totals of invoices already frozen.

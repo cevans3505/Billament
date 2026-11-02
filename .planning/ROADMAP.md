@@ -2,7 +2,7 @@
 
 ## Overview
 
-This milestone makes PrintInvoicer easier to understand at a glance, pays down known concerns in the order that gives the most value per unit of effort, and opens a way for people to send slice files. It starts with generated README images of the job list, the job editor and a sample invoice. Next come the concern fixes in triage score order: first the quick wins scored 2.0 and above, then the data-safety fixes scored 1.5. It ends with GitHub issue forms for slice file submissions, linked from the README and from a menu item in the app. Finalized invoices must never change at any point along the way.
+This milestone makes PrintInvoicer easier to understand at a glance, pays down known concerns in the order that gives the most value per unit of effort, and opens a way for people to send slice files. It starts with generated README images of the job list, the job editor and a sample invoice. Next come the concern fixes in triage score order: first the quick wins scored 2.0 and above, then the data-safety fixes scored 1.5. Before the data-safety fixes, the project is renamed to Billament and ships as 4.0.0, so the later work uses the new name. It ends with GitHub issue forms for slice file submissions, linked from the README and from a menu item in the app. Finalized invoices must never change at any point along the way.
 
 ## Phases
 
@@ -13,9 +13,10 @@ This milestone makes PrintInvoicer easier to understand at a glance, pays down k
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: README Showcase** - Generated offscreen images of the job list, job editor and invoice page 1 in the README (completed 2026-11-01)
-- [x] **Phase 2: Quick-Win Concern Fixes** - Concerns scored 2.0 and above fixed in score order (checksums, legacy database test, safer paths, names and reads) (completed 2026-11-01)
-- [ ] **Phase 3: Data Safety Fixes** - Concerns scored 1.5 fixed in score order (freeze once, safe restore, ZIP cap, single instance, integrity check)
-- [ ] **Phase 4: Slice File Submissions** - GitHub issue forms for slice files, linked from the README and an app menu item, with privacy warnings
+- [x] **Phase 2: Quick-Win Concern Fixes** - Concerns scored 2.0 and above fixed in score order (checksums, legacy database test, safer paths, names and reads) (completed 2026-11-01)
+- [ ] **Phase 3: Rename to Billament** - The project, app, data folders and repository become Billament, with a one-time safe move of existing data; ships as 4.0.0
+- [ ] **Phase 4: Data Safety Fixes** - Concerns scored 1.5 fixed in score order (freeze once, safe restore, ZIP cap, single instance, integrity check)
+- [ ] **Phase 5: Slice File Submissions** - GitHub issue forms for slice files, linked from the README and an app menu item, with privacy warnings
 
 ## Phase Details
 
@@ -62,10 +63,24 @@ Plans:
 **Wave 3** *(blocked on Wave 2 completion: AUDITING.md and the 27-tag count)*
 - [x] 02-04-PLAN.md - Tracer: SafeFileName in Core names every invoice and preview PDF and keeps it in its folder; ShellCommands passes Explorer paths through ArgumentList (FIX-06, FIX-03) [cloud code and tests; App compile-checked; run checks on Windows]
 
-### Phase 3: Data Safety Fixes
+### Phase 3: Rename to Billament
+**Goal**: PrintInvoicer becomes Billament everywhere (code, app, PDFs, scripts, docs, data folders and the GitHub repository), existing users keep every job and finalized invoice through a one-time safe move of their data, and the result ships as 4.0.0, so later phases are built under the new name from the start.
+**Mode:** mvp
+**Depends on**: Phase 2 (release 3.7.0 is the last PrintInvoicer release; run order only)
+**Requirements**: NAME-01, NAME-02, NAME-03, NAME-04, NAME-05, NAME-06, NAME-07, NAME-08
+**Success Criteria** (what must be TRUE):
+  1. The solution is `Billament.sln` with projects, folders and namespaces `Billament.Core`, `Billament.App`, `Billament.Tests` and `Billament.UiTests`; the build makes `Billament.exe`, and window titles, dialogs, the update bar, the error report and the PDFs say Billament
+  2. On first start with only `Documents\PrintInvoicer` and `%LOCALAPPDATA%\PrintInvoicer` present, a backup is made, then the data moves once to `Documents\Billament` (database `billament.db`) and `%LOCALAPPDATA%\Billament`; every finalized invoice total is the same before and after, and a custom backup or invoice folder inside the old folder still points at the moved files
+  3. If the new folders already exist the old ones are never touched, and any failure during the move shows a plain message and leaves the old data where it was; the move logic is in Core with tests that run on Linux, and every new file or folder access has an `// AUDIT:` comment and an AUDITING.md row
+  4. The update check, its allow-check, the issue page, README and docs point at `cevans3505/Billament`, and a 3.7.0 install still finds 4.0.0 through GitHub's redirect after the repository is renamed
+  5. `publish.ps1`, `make-readme-images.ps1`, `tools/Make-Icon.ps1`, `ci.yml` and `release.yml` use the new name (install folder, Start menu shortcut with the old ones removed, `Billament-<version>.zip`, the "Billament 4.0" read-me heading check), and a case-insensitive search for "PrintInvoicer" finds only deliberate hits (migration old-folder names, history, changelog)
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 4: Data Safety Fixes
 **Goal**: The remaining v1 concerns (triage score 1.5) are fixed in score order, so the price freeze runs only once, a restore or a second copy of the app can't overwrite data, oversized slice archives are rejected, and database corruption is caught early.
 **Mode:** mvp
-**Depends on**: Phase 2 (FIX-08 changes the freeze path that the FIX-02 legacy-database test guards)
+**Depends on**: Phase 3 (built under the new name); Phase 2 (FIX-08 changes the freeze path that the FIX-02 legacy-database test guards)
 **Requirements**: FIX-08, FIX-09, FIX-10, FIX-11, FIX-12
 **Success Criteria** (what must be TRUE):
   1. Once the one-time freeze of older finalized jobs has run, `settings` records it and later starts skip it, while the Phase 2 legacy-database test still shows the same totals for invoices already frozen
@@ -76,7 +91,7 @@ Plans:
 **Plans**: TBD
 **UI hint**: yes
 
-### Phase 4: Slice File Submissions
+### Phase 5: Slice File Submissions
 **Goal**: People can send slice files and printer and slicer details through GitHub issue forms, reached from the README or a menu item in the app, and are warned about what slice files can reveal before they share them.
 **Mode:** mvp
 **Depends on**: Phase 1 (README layout); independent of the fix phases
@@ -93,11 +108,12 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1, 2, 3, 4
+Phases execute in numeric order: 1, 2, 3, 4, 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. README Showcase | 2/2 | Complete    | 2026-11-01 |
 | 2. Quick-Win Concern Fixes | 4/4 | Complete    | 2026-11-01 |
-| 3. Data Safety Fixes | 0/TBD | Not started | - |
-| 4. Slice File Submissions | 0/TBD | Not started | - |
+| 3. Rename to Billament | 0/TBD | Not started | - |
+| 4. Data Safety Fixes | 0/TBD | Not started | - |
+| 5. Slice File Submissions | 0/TBD | Not started | - |

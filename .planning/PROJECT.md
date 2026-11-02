@@ -2,7 +2,7 @@
 
 ## What This Is
 
-PrintInvoicer is a Windows desktop app (.NET 10, WPF, SQLite, QuestPDF) that prices 3D print jobs (FDM and resin) from sliced files and makes PDF invoices. It is a public, MIT-licensed personal project shared as-is at https://github.com/cevans3505/PrintInvoicer (current version 3.6.0). This milestone makes the project easier to understand at a glance, pays down known concerns in the order that gives the most value per unit of effort, and opens a channel for people to send slice files so support and accuracy can improve.
+PrintInvoicer is a Windows desktop app (.NET 10, WPF, SQLite, QuestPDF) that prices 3D print jobs (FDM and resin) from sliced files and makes PDF invoices. It is a public, MIT-licensed personal project shared as-is at https://github.com/cevans3505/PrintInvoicer (current version 3.7.0; being renamed to Billament in Phase 3). This milestone makes the project easier to understand at a glance, pays down known concerns in the order that gives the most value per unit of effort, and opens a channel for people to send slice files so support and accuracy can improve.
 
 ## Core Value
 
@@ -28,7 +28,8 @@ Prices and invoices stay correct and trustworthy: a finalized invoice never chan
 
 ### Active
 
-- [ ] Concerns scored 1.5 are fixed in score order (Phase 3); items that are not really fixable (license, scale limits) are noted and left alone
+- [ ] The project is renamed to Billament everywhere (code, app, data folders, GitHub repository), existing data moves safely once, and it ships as 4.0.0 (Phase 3)
+- [ ] Concerns scored 1.5 are fixed in score order (Phase 4); items that are not really fixable (license, scale limits) are noted and left alone
 - [ ] A badly typed invoice or backup folder in Settings shows a plain message instead of the error report (review finding WR-04 from Phase 2)
 - [ ] A GitHub issue form collects slice files plus printer make/model, printer type, slicer and version, and expected vs actual results, for both "unsupported printer/slicer" and "inaccurate calculation" reports
 - [ ] The app has a menu item that opens that issue form in the browser
@@ -74,6 +75,11 @@ Prices and invoices stay correct and trustworthy: a finalized invoice never chan
 | Invoice PDF names: title 60, number 30 (keep the end), whole name 120 characters | Safe names that keep sequence digits; a few unusual old titles get a new name | ✓ Good: Phase 2 |
 | Explorer paths passed as separate arguments (ArgumentList) | A path cannot change the command; checked on Windows | ✓ Good: Phase 2 |
 | Release checksum verified on 3.7.0, right after Phase 2 merges | Can only run on a real tag | — Pending |
+| Rename the project to Billament (bill plus filament), one word: `Billament.exe`, `Billament.*` projects and namespaces | One word makes a clean exe and folder name | — Pending (Phase 3) |
+| Rename comes next, before the data-safety fixes | Later phases use the new name from the start | — Pending (Phase 3) |
+| Move old data folders once on first start, after a backup; never touch them if the new folders exist | Users keep their data without manual steps; a failed move loses nothing | — Pending (Phase 3) |
+| Rename the GitHub repository to cevans3505/Billament | Name matches everywhere; GitHub redirects keep old links and 3.7.0 update checks working | — Pending (Phase 3, manual step) |
+| Ship the rename as 4.0.0 | New name, new data folders and a new exe name are a major change | — Pending (Phase 3) |
 
 ## Evolution
 
@@ -93,4 +99,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-02 after Phase 2*
+*Last updated: 2026-11-02 after adding Phase 3 (rename to Billament)*
