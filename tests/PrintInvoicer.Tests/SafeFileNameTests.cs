@@ -143,4 +143,144 @@ public sealed class SafeFileNameTests
         Assert.Equal(new string('a', 60), SafeFileName.Clean(title, SafeFileName.MaxTitleLength));
         Assert.Equal(title, OldWindowsName(title));
     }
+
+    [Fact]
+    public void Only_files_directly_in_the_folder_count_as_inside()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "pi-names");
+
+        Assert.True(SafeFileName.IsDirectlyInside(folder, Path.Combine(folder, "a.pdf")));
+        Assert.True(SafeFileName.IsDirectlyInside(folder + Path.DirectorySeparatorChar, Path.Combine(folder, "a.pdf")));
+        Assert.False(SafeFileName.IsDirectlyInside(folder, Path.Combine(folder, "..", "a.pdf")));
+        Assert.False(SafeFileName.IsDirectlyInside(folder, Path.Combine(folder, "sub", "a.pdf")));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("...")]
+    [InlineData(". .")]
+    [InlineData("..")]
+    public void Empty_text_becomes_untitled(string? text)
+    {
+        Assert.Equal("untitled", SafeFileName.Clean(text, 60));
+    }
+
+    [Theory]
+    [InlineData("Console", "Console")]
+    [InlineData("COM10", "COM10")]
+    [InlineData("v1..2", "v1.2")]
+    [InlineData("Com1", "_Com1")]
+    [InlineData("lpt9 ", "_lpt9")]
+    [InlineData("NUL", "_NUL")]
+    [InlineData("aux.pdf", "_aux.pdf")]
+    [InlineData("CONIN$", "_CONIN$")]
+    [InlineData("CONOUT$", "_CONOUT$")]
+    [InlineData("PRN", "_PRN")]
+    [InlineData("COM\u00B9", "_COM\u00B9")]
+    public void Reserved_names_get_an_underscore_and_others_do_not(string text, string expected)
+    {
+        Assert.Equal(expected, SafeFileName.Clean(text, 60));
+    }
+
+    [Fact]
+    public void A_reserved_name_at_the_limit_stays_within_it()
+    {
+        string result = SafeFileName.Clean("CON." + new string('a', 56), 60);
+
+        Assert.StartsWith("_CON.", result);
+        AssertSafe(result, 60);
+    }
+
+    [Theory]
+    [InlineData("Fin\u0007clips", "Fin-clips")]
+    public void Control_characters_become_dashes(string text, string expected)
+    {
+        Assert.Equal(expected, SafeFileName.Clean(text, 60));
+    }
+
+    // Lone surrogates cannot be written in an attribute argument (the compiler stores them as U+FFFD), so they are
+    // built from char values here.
+    [Fact]
+    public void Broken_surrogates_become_dashes()
+    {
+        char high = (char)0xD800;
+        char low = (char)0xDC00;
+
+        Assert.Equal("abc-def", SafeFileName.Clean("abc" + high + "def", 60));
+        Assert.Equal("abc-def", SafeFileName.Clean("abc" + low + "def", 60));
+        Assert.Equal("abc-", SafeFileName.Clean("abc" + high, 60));
+        Assert.Equal("a" + high + low + "b", SafeFileName.Clean("a" + high + low + "b", 60));
+        Assert.Equal("-" + high + low + "-", SafeFileName.Clean("" + high + high + low + low, 60));
+    }
+
+    [Fact]
+    public void Broken_surrogates_come_out_safe()
+    {
+        char high = (char)0xD800;
+        char low = (char)0xDC00;
+
+        AssertSafe(SafeFileName.Clean("abc" + high + low + high, 60), 60);
+        AssertSafe(SafeFileName.Clean("" + low + high, 60), 60);
+        AssertSafe(SafeFileName.Clean(new string('z', 59) + high, 60), 60);
+    }
+
+    [Fact]
+    public void Long_text_is_cut_to_the_limit()
+    {
+        Assert.Equal(60, SafeFileName.Clean(new string('x', 1000), 60).Length);
+    }
+
+    [Fact]
+    public void An_emoji_at_the_cut_point_is_dropped_whole()
+    {
+        string text = new string('a', 59) + "\U0001F600";
+
+        Assert.Equal(new string('a', 59), SafeFileName.Clean(text, 60));
+    }
+
+    [Fact]
+    public void An_emoji_that_fits_is_kept_whole()
+    {
+        string text = new string('a', 58) + "\U0001F600";
+
+        Assert.Equal(text, SafeFileName.Clean(text, 60));
+    }
+
+    [Fact]
+    public void Long_number_and_title_keep_the_name_within_the_limit()
+    {
+        string name = SafeFileName.Compose("Invoice", new string('9', 1000), new string('t', 1000), " (detail).pdf");
+
+        Assert.True(name.Length <= SafeFileName.MaxNameLength);
+        Assert.EndsWith(" (detail).pdf", name);
+    }
+
+    [Fact]
+    public void Programmer_mistakes_are_reported()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => SafeFileName.Clean("x", 3));
+        Assert.Throws<ArgumentException>(() => SafeFileName.Compose(" ", "1", "t", ".pdf"));
+        Assert.Throws<ArgumentException>(() => SafeFileName.Compose("Invoice", "1", "t", new string('s', 100)));
+    }
+
+    [Theory]
+    [InlineData("..")]
+    [InlineData(@"..\..\evil")]
+    [InlineData("../../etc/passwd")]
+    [InlineData(@"C:\Windows\x")]
+    [InlineData("a|b?c*d<e>f\"g")]
+    [InlineData("CON")]
+    [InlineData("Com1.txt")]
+    [InlineData("NUL ")]
+    [InlineData("  . .  ")]
+    [InlineData("Fin\u0007\u0000clips")]
+    [InlineData("\U0001F600\U0001F600\U0001F600")]
+    public void Hostile_text_comes_out_safe(string text)
+    {
+        AssertSafe(SafeFileName.Clean(text, 60), 60);
+        AssertSafe(SafeFileName.Clean(text, 30), 30);
+        AssertSafe(SafeFileName.Clean(new string('z', 100) + text, 60), 60);
+    }
 }

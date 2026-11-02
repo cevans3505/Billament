@@ -51,8 +51,8 @@ only in response to a click.
 | --- | --- | --- |
 | `Documents\PrintInvoicer\printinvoicer.db` | All jobs, materials, printers and settings (SQLite) | `Database` (`Open`, used by every read and write) |
 | `Documents\PrintInvoicer\Backups\` (or the folder set in Settings) | Daily and manual copies of the database; oldest daily copies deleted to keep 14; each copy is first written to its own uniquely named `.partial` file and then moved into place; a copy that fails deletes its own `.partial` file and no other (one left by a copy that was cut off, for example by a power cut, stays until you delete it) | `DatabaseBackup` |
-| `Documents\PrintInvoicer\Invoices\` (or the folder set in Settings) | Invoice and detail-sheet PDFs | `InvoicePdf.Write` |
-| `%TEMP%\PrintInvoicer previews\` | Preview PDFs | `InvoicePdf.Write` |
+| `Documents\PrintInvoicer\Invoices\` (or the folder set in Settings) | Invoice and detail-sheet PDFs. Their names come from the invoice number and job title, cleaned and length-limited by `SafeFileName`, so a PDF is always saved directly in this folder | `InvoicePdf.Write` |
+| `%TEMP%\PrintInvoicer previews\` | Preview PDFs (names cleaned the same way) | `InvoicePdf.Write` |
 | `%LOCALAPPDATA%\PrintInvoicer\update-check.json` | When GitHub was last asked, and the newest release it reported | `UpdateService.SaveState` |
 | `%LOCALAPPDATA%\PrintInvoicer\window-layout.json` | Window positions and sizes | `WindowLayout.Save` |
 | `%LOCALAPPDATA%\PrintInvoicer\Errors\` | Details of unexpected errors (app version, Windows version, time, the error) | `ErrorReport.Save` |

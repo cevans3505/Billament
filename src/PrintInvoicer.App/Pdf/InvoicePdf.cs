@@ -51,6 +51,12 @@ public static class InvoicePdf
         };
         string path = Path.Combine(folder, name);
 
+        // Cannot happen with a name from SafeFileName; checked so that no later change can save a PDF outside its folder.
+        if (!SafeFileName.IsDirectlyInside(folder, path))
+        {
+            throw new InvalidOperationException($"The PDF name \"{name}\" would not be saved in {folder}.");
+        }
+
         // AUDIT: file write. Saves the PDF to the invoice folder (or, for previews, the temporary previews folder),
         // replacing an older copy of the same invoice.
         Build(job, quote, book, kind).GeneratePdf(path);
