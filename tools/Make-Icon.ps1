@@ -1,4 +1,4 @@
-# Renders src\PrintInvoicer.App\Assets\Icon.xaml into a multi-size PrintInvoicer.ico (PNG-compressed entries).
+# Renders src\Billament.App\Assets\Icon.xaml into a multi-size Billament.ico (PNG-compressed entries).
 # Windows PowerShell 5.1 runs in STA mode by default, which WPF rendering needs.
 param(
     [string]$PreviewDir
@@ -7,7 +7,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName PresentationCore, PresentationFramework, WindowsBase
 
-$assets = Join-Path $PSScriptRoot '..\src\PrintInvoicer.App\Assets'
+$assets = Join-Path $PSScriptRoot '..\src\Billament.App\Assets'
 $xaml = [IO.File]::ReadAllText((Join-Path $assets 'Icon.xaml'))
 $dict = [Windows.Markup.XamlReader]::Parse($xaml)
 $sizes = 16, 20, 24, 32, 40, 48, 64, 128, 256
@@ -47,7 +47,7 @@ foreach ($img in $images) {
 foreach ($img in $images) { $w.Write($img.Png) }
 $w.Flush()
 
-$ico = Join-Path $assets 'PrintInvoicer.ico'
+$ico = Join-Path $assets 'Billament.ico'
 [IO.File]::WriteAllBytes($ico, $out.ToArray())
 Write-Host "Wrote $ico ($($images.Count) sizes)"
 

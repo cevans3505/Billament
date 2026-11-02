@@ -32,14 +32,14 @@ jobs:
           global-json-file: global.json
 
       - name: Restore
-        run: dotnet restore PrintInvoicer.sln
+        run: dotnet restore Billament.sln
 
       - name: Build (Release)
-        run: dotnet build PrintInvoicer.sln -c Release --no-restore
+        run: dotnet build Billament.sln -c Release --no-restore
 
       - name: Unit tests
         run: >
-          dotnet test tests/PrintInvoicer.Tests -c Release --no-build
+          dotnet test tests/Billament.Tests -c Release --no-build
           --logger "trx;LogFileName=unit-tests.trx" --results-directory TestResults
 
       - name: Upload test results
@@ -67,14 +67,14 @@ jobs:
           global-json-file: global.json
 
       - name: Restore
-        run: dotnet restore PrintInvoicer.sln
+        run: dotnet restore Billament.sln
 
       - name: Build (Release)
-        run: dotnet build tests/PrintInvoicer.UiTests -c Release --no-restore
+        run: dotnet build tests/Billament.UiTests -c Release --no-restore
 
       - name: Screen tests
         run: >
-          dotnet test tests/PrintInvoicer.UiTests -c Release --no-build
+          dotnet test tests/Billament.UiTests -c Release --no-build
           --logger "trx;LogFileName=screen-tests.trx" --results-directory TestResults
 
       - name: Upload test results and screenshots
@@ -84,5 +84,5 @@ jobs:
           name: screen-test-results
           path: |
             TestResults/*.trx
-            tests/PrintInvoicer.UiTests/bin/Release/net10.0-windows/screens/
+            tests/Billament.UiTests/bin/Release/net10.0-windows/screens/
           if-no-files-found: warn

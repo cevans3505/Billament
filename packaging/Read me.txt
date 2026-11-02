@@ -1,15 +1,15 @@
-PrintInvoicer 3.7
-=================
+Billament 4.0
+=============
 
 Tracks 3D printing jobs and makes PDF invoices, for FDM and resin printers.
 
 Install
 -------
-1. Copy PrintInvoicer.exe anywhere you like, for example a folder in Documents. Nothing else needs installing.
+1. Copy Billament.exe anywhere you like, for example a folder in Documents. Nothing else needs installing.
 2. Run it. Windows may warn that the app is from an unknown publisher: choose More info, then Run anyway.
 3. Right-click it on the taskbar and choose Pin to taskbar if you want it handy.
 
-Your jobs and settings are saved in Documents\PrintInvoicer. The app copies them to Documents\PrintInvoicer\Backups
+Your jobs and settings are saved in Documents\Billament. The app copies them to Documents\Billament\Backups
 once a day (the newest 14 are kept). For safety against a failed drive, set Settings > Backups > Back up to
 a OneDrive, Dropbox or network folder. Restore a backup... on the same tab puts an old copy back.
 
@@ -36,8 +36,8 @@ change it; it is then priced at your current rates again.
 Updates
 -------
 The app tells you when there is a new version: a bar appears at the top of the window (it checks at most once a
-day, and can be turned off in Settings). New versions are posted at https://github.com/cevans3505/PrintInvoicer/releases. Close the app, download the
-newest zip, and replace your PrintInvoicer.exe with the one inside. Your jobs and settings are kept, since they live
-in Documents\PrintInvoicer, not next to the exe. Upgrades convert your data automatically.
+day, and can be turned off in Settings). New versions are posted at https://github.com/cevans3505/Billament/releases. Close the app, download the
+newest zip, and replace your Billament.exe with the one inside. Your jobs and settings are kept, since they live
+in Documents\Billament, not next to the exe. Upgrades convert your data automatically.
 
-The source code is at https://github.com/cevans3505/PrintInvoicer (MIT license) if you want to fork it and change it.
+The source code is at https://github.com/cevans3505/Billament (MIT license) if you want to fork it and change it.

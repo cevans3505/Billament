@@ -1,4 +1,4 @@
-# Auditing PrintInvoicer
+# Auditing Billament
 
 A guide for anyone checking this code before trusting it. It lists every place the program reaches outside itself: the
 network, other programs, and files. Those are the places where software can do harm, so they are the places worth
@@ -23,10 +23,10 @@ code that does any of these things **without** an `AUDIT:` tag, that's a gap in 
 
 | What | Where | When |
 | --- | --- | --- |
-| `GET https://api.github.com/repos/cevans3505/PrintInvoicer/releases/latest` | `src/PrintInvoicer.App/UpdateService.cs`, `FetchLatestAsync` | At startup, at most once a day, unless turned off in Settings. Also when the user clicks **Check now**. |
+| `GET https://api.github.com/repos/cevans3505/Billament/releases/latest` | `src/Billament.App/UpdateService.cs`, `FetchLatestAsync` | At startup, at most once a day, unless turned off in Settings. Also when the user clicks **Check now**. |
 
 That is the only network request in the program. It sends no information about the user or their data; only the
-standard request headers (a `User-Agent` of `PrintInvoicer/1`). From the reply it reads only the release's tag and page
+standard request headers (a `User-Agent` of `Billament/1`). From the reply it reads only the release's tag and page
 address. It reads at most 256 KB of the reply (`LatestReleaseReply.MaxBytes`); a longer reply is ignored and treated as
 no update information. There is no telemetry, analytics or crash upload. Error details are saved locally and never sent
 (see below).
@@ -44,20 +44,20 @@ quote or a space stays one argument.
 | A GitHub release page in the browser | `UpdateService.Download` (refuses any address outside this repository) | **Download** on the update bar |
 | The GitHub "new issue" page, and Explorer showing the error file | `ErrorReport.Show` | **Yes** in the error dialog |
 | A folder in Explorer | `SettingsViewModel.OpenFolder`, `OpenBackupFolder` | The **Open** buttons in Settings |
-| PrintInvoicer itself, to restart | `SettingsViewModel.RestoreBackup` | After the user confirms **Restore a backup** |
+| Billament itself, to restart | `SettingsViewModel.RestoreBackup` | After the user confirms **Restore a backup** |
 | The Windows print dialog, then the chosen printer | `InvoicePrinter.Print` | **Print invoices** / **Print internal** |
 
 ## Files written or deleted
 
 | Location | What | Where in the code |
 | --- | --- | --- |
-| `Documents\PrintInvoicer\printinvoicer.db` | All jobs, materials, printers and settings (SQLite) | `Database` (`Open`, used by every read and write) |
-| `Documents\PrintInvoicer\Backups\` (or the folder set in Settings) | Daily and manual copies of the database; oldest daily copies deleted to keep 14; each copy is first written to its own uniquely named `.partial` file and then moved into place; a copy that fails deletes its own `.partial` file and no other (one left by a copy that was cut off, for example by a power cut, stays until you delete it) | `DatabaseBackup` |
-| `Documents\PrintInvoicer\Invoices\` (or the folder set in Settings) | Invoice and detail-sheet PDFs. Their names come from the invoice number and job title, cleaned and length-limited by `SafeFileName`, so a PDF is always saved directly in this folder | `InvoicePdf.Write` |
-| `%TEMP%\PrintInvoicer previews\` | Preview PDFs (names cleaned the same way) | `InvoicePdf.Write` |
-| `%LOCALAPPDATA%\PrintInvoicer\update-check.json` | When GitHub was last asked, and the newest release it reported | `UpdateService.SaveState` |
-| `%LOCALAPPDATA%\PrintInvoicer\window-layout.json` | Window positions and sizes | `WindowLayout.Save` |
-| `%LOCALAPPDATA%\PrintInvoicer\Errors\` | Details of unexpected errors (app version, Windows version, time, the error) | `ErrorReport.Save` |
+| `Documents\Billament\billament.db` | All jobs, materials, printers and settings (SQLite) | `Database` (`Open`, used by every read and write) |
+| `Documents\Billament\Backups\` (or the folder set in Settings) | Daily and manual copies of the database; oldest daily copies deleted to keep 14; each copy is first written to its own uniquely named `.partial` file and then moved into place; a copy that fails deletes its own `.partial` file and no other (one left by a copy that was cut off, for example by a power cut, stays until you delete it) | `DatabaseBackup` |
+| `Documents\Billament\Invoices\` (or the folder set in Settings) | Invoice and detail-sheet PDFs. Their names come from the invoice number and job title, cleaned and length-limited by `SafeFileName`, so a PDF is always saved directly in this folder | `InvoicePdf.Write` |
+| `%TEMP%\Billament previews\` | Preview PDFs (names cleaned the same way) | `InvoicePdf.Write` |
+| `%LOCALAPPDATA%\Billament\update-check.json` | When GitHub was last asked, and the newest release it reported | `UpdateService.SaveState` |
+| `%LOCALAPPDATA%\Billament\window-layout.json` | Window positions and sizes | `WindowLayout.Save` |
+| `%LOCALAPPDATA%\Billament\Errors\` | Details of unexpected errors (app version, Windows version, time, the error) | `ErrorReport.Save` |
 
 **Restoring a backup** (Settings, after a confirmation) replaces the database's contents with the chosen backup. The
 current data is backed up first, and a damaged backup is refused.
@@ -77,7 +77,7 @@ README pictures, are listed under [Building and releasing](#building-and-releasi
 
 The file readers treat every file as untrusted. They never run anything from a file. The XML parser has DTDs and
 external references switched off, every size is capped, and every number is range-checked (limits in
-`src/PrintInvoicer.Core/Slicing/SliceLimits.cs`). Hundreds of tests in `tests/PrintInvoicer.Tests/*RobustnessTests.cs`
+`src/Billament.Core/Slicing/SliceLimits.cs`). Hundreds of tests in `tests/Billament.Tests/*RobustnessTests.cs`
 feed the readers damaged files.
 
 ## What it never does
@@ -111,7 +111,7 @@ Plus .NET 10 and WPF from Microsoft. The test projects use xUnit; tests are not 
 
 These run on a developer's PC or on GitHub, never on users' machines:
 
-- **`publish.ps1`** runs the tests and builds the program. It then installs it to `%LOCALAPPDATA%\Programs\PrintInvoicer`
+- **`publish.ps1`** runs the tests and builds the program. It then installs it to `%LOCALAPPDATA%\Programs\Billament`
   with a Start menu shortcut, and refreshes Windows' icon cache (`ie4uinit.exe -show`).
 - **`make-readme-images.ps1`** rebuilds the three README pictures. It starts `dotnet test` for one screen test
   (`ReadmeImageTests`), which runs offscreen, creates the folders if needed and writes PNG files to `docs/images` in the
@@ -122,11 +122,11 @@ These run on a developer's PC or on GitHub, never on users' machines:
   `WpfHost.cs` (screenshots) and `ReadmeImageTests.cs` (README pictures), outside the `src` count above.
 - **`.github/workflows/ci.yml`** builds and tests every change on a GitHub Windows machine, with a read-only token.
 - **`.github/workflows/release.yml`**, on a version tag, builds the program the same way, writes the zip's SHA-256
-  checksum to `PrintInvoicer-<version>.zip.sha256`, and attaches the zip and that file to a **draft** release whose
+  checksum to `Billament-<version>.zip.sha256`, and attaches the zip and that file to a **draft** release whose
   notes include the checksum. Only that last step has write access, and a person publishes the release by hand.
 
 Releases are not code-signed. Each release gives the zip's SHA-256 checksum in its notes and in its `.sha256` file;
-`Get-FileHash .\PrintInvoicer-<version>.zip -Algorithm SHA256` shows whether a download is complete and unchanged from
+`Get-FileHash .\Billament-<version>.zip -Algorithm SHA256` shows whether a download is complete and unchanged from
 what the release describes. It does not prove who built it, because the checksum is published in the same place as the
 zip. To be sure a download matches this source, build it yourself from the tag with `publish.ps1` or the
 `dotnet publish` command in the release workflow.
@@ -135,9 +135,9 @@ zip. To be sure a download matches this source, build it yourself from the tag w
 
 1. Search for `AUDIT:` and read each tagged line and its method.
 2. Read `UpdateService.cs` (the only network code) and `ErrorReport.cs`.
-3. Read the file readers in `src/PrintInvoicer.Core/Slicing/`, the code that handles files from outside.
+3. Read the file readers in `src/Billament.Core/Slicing/`, the code that handles files from outside.
 4. Skim `Database.cs` and `DatabaseBackup.cs`: all SQL uses parameters for values.
 5. The rest is pricing (`Pricing/`), data classes (`Models/`), windows (`*.xaml`, `ViewModels/`) and PDF layout
    (`Pdf/`). These do calculation and display, and touch nothing outside the program.
 
-Found something? Please [open an issue](https://github.com/cevans3505/PrintInvoicer/issues).
+Found something? Please [open an issue](https://github.com/cevans3505/Billament/issues).

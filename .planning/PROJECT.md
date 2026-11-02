@@ -1,8 +1,8 @@
-# PrintInvoicer
+# Billament
 
 ## What This Is
 
-PrintInvoicer is a Windows desktop app (.NET 10, WPF, SQLite, QuestPDF) that prices 3D print jobs (FDM and resin) from sliced files and makes PDF invoices. It is a public, MIT-licensed personal project shared as-is at https://github.com/cevans3505/PrintInvoicer (current version 3.7.0; being renamed to Billament in Phase 3). This milestone makes the project easier to understand at a glance, pays down known concerns in the order that gives the most value per unit of effort, and opens a channel for people to send slice files so support and accuracy can improve.
+Billament is a Windows desktop app (.NET 10, WPF, SQLite, QuestPDF) that prices 3D print jobs (FDM and resin) from sliced files and makes PDF invoices. It is a public, MIT-licensed personal project shared as-is at https://github.com/cevans3505/Billament (version 4.0.0 is the first release under this name; Phase 3 renames the project and moves existing data once). This milestone makes the project easier to understand at a glance, pays down known concerns in the order that gives the most value per unit of effort, and opens a channel for people to send slice files so support and accuracy can improve.
 
 ## Core Value
 
@@ -46,7 +46,7 @@ Prices and invoices stay correct and trustworthy: a finalized invoice never chan
 ## Context
 
 - Brownfield: codebase mapped on 2026-11-01 in `.planning/codebase/` (ARCHITECTURE, STACK, CONVENTIONS, CONCERNS, INTEGRATIONS, STRUCTURE, TESTING).
-- Layout: `src/PrintInvoicer.Core` (net10.0, no UI, runs on Linux), `src/PrintInvoicer.App` (WPF), `tests/PrintInvoicer.Tests`, `tests/PrintInvoicer.UiTests` (Windows only, offscreen).
+- Layout: `src/Billament.Core` (net10.0, no UI, runs on Linux), `src/Billament.App` (WPF), `tests/Billament.Tests`, `tests/Billament.UiTests` (Windows only, offscreen).
 - Big files: `Data/Database.cs`, `Pdf/InvoicePdf.cs`, `ViewModels/JobEditorViewModel.cs`.
 - Concerns include: repricing on revert-and-refinalize, retroactive price freeze on every start, string-typed money columns, implicit schema versioning, local-date handling, stale window after restore, backup overlap at startup, shell argument concatenation, restore accepting any DB with the main tables, output names from user data, full job list reload, unsigned releases, no crash recovery for in-progress jobs, no corruption check, and test coverage gaps.
 - GitHub attachments do not accept .3mf / .goo directly; submitters will likely need to zip files (to confirm during planning).

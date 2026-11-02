@@ -1,23 +1,23 @@
-# PrintInvoicer: notes for AI coding agents
+# Billament: notes for AI coding agents
 
 Windows desktop app (.NET 10, WPF, SQLite, QuestPDF) that prices 3D print jobs (FDM and resin) and makes PDF invoices.
 Public, MIT, shared as-is. User docs: `README.md`. Security map: `AUDITING.md`.
 
 ## Layout
 
-- `src/PrintInvoicer.Core` (net10.0, no UI, runs on Linux): `Models/`, `Pricing/` (PricingCalculator, PriceBook,
+- `src/Billament.Core` (net10.0, no UI, runs on Linux): `Models/`, `Pricing/` (PricingCalculator, PriceBook,
   PriceSnapshot), `Slicing/` (Bambu and .goo readers), `Data/` (Database: hand-written SQL; DatabaseBackup).
-- `src/PrintInvoicer.App` (net10.0-windows, WPF): `ViewModels/`, `*.xaml`, `Pdf/` (InvoicePdf), UpdateService,
+- `src/Billament.App` (net10.0-windows, WPF): `ViewModels/`, `*.xaml`, `Pdf/` (InvoicePdf), UpdateService,
   ErrorReport, WindowLayout.
-- `tests/PrintInvoicer.Tests` (Core, runs anywhere) and `tests/PrintInvoicer.UiTests` (WPF, Windows only, offscreen).
+- `tests/Billament.Tests` (Core, runs anywhere) and `tests/Billament.UiTests` (WPF, Windows only, offscreen).
 - Big files: `Data/Database.cs`, `Pdf/InvoicePdf.cs`, `ViewModels/JobEditorViewModel.cs`. Grep for the member you
   need instead of reading them whole.
 
 ## Commands
 
-- Test everything: `dotnet test PrintInvoicer.sln` (Linux: `dotnet test tests/PrintInvoicer.Tests` only).
+- Test everything: `dotnet test Billament.sln` (Linux: `dotnet test tests/Billament.Tests` only).
 - Install locally: `.\publish.ps1` with the app closed (runs all tests first).
-- Release: bump `<Version>` in `src/PrintInvoicer.App/PrintInvoicer.App.csproj` (and the heading of
+- Release: bump `<Version>` in `src/Billament.App/Billament.App.csproj` (and the heading of
   `packaging/Read me.txt` on a major/minor bump), push to `main`, wait for CI, push tag `v<version>`; the Release
   workflow makes a draft; check the zip and its `.sha256` file, write notes (keep the `SHA-256:` line), publish.
   Steps in README, "Making a release".

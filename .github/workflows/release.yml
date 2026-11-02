@@ -1,7 +1,7 @@
 name: Release
 
-# Pushing a tag such as v3.5.0 builds PrintInvoicer-3.5.0.zip and its SHA-256 checksum file
-# (PrintInvoicer-3.5.0.zip.sha256) and attaches both to a DRAFT release for that tag.
+# Pushing a tag such as v3.5.0 builds Billament-3.5.0.zip and its SHA-256 checksum file
+# (Billament-3.5.0.zip.sha256) and attaches both to a DRAFT release for that tag.
 # Nothing is published automatically: review the draft on GitHub, write the notes and press Publish release.
 # The app's update check only sees published releases, so users are not told about a draft.
 
@@ -32,7 +32,7 @@ jobs:
       - name: Check the tag matches the app version
         id: version
         run: |
-          $csproj = 'src/PrintInvoicer.App/PrintInvoicer.App.csproj'
+          $csproj = 'src/Billament.App/Billament.App.csproj'
           $node = ([xml](Get-Content -Raw $csproj)).SelectSingleNode('/Project/PropertyGroup/Version')
           if (-not $node -or -not $node.InnerText.Trim()) {
               Write-Output "::error file=$csproj::No <Version> found in $csproj."
@@ -47,7 +47,7 @@ jobs:
           # Not fatal: the read-me heading is edited by hand and may lag behind a patch release.
           $readmeHeading = (Get-Content -LiteralPath 'packaging/Read me.txt' -TotalCount 1).Trim()
           $majorMinor = ($version -split '\.')[0..1] -join '.'
-          if ($readmeHeading -notmatch "^PrintInvoicer $([regex]::Escape($majorMinor))(\.|$)") {
+          if ($readmeHeading -notmatch "^Billament $([regex]::Escape($majorMinor))(\.|$)") {
               Write-Output "::warning file=packaging/Read me.txt::The read-me heading is '$readmeHeading' but this release is $version."
           }
           Write-Output "Releasing version $version from tag $tag"
@@ -60,19 +60,19 @@ jobs:
 
       - name: Unit tests
         run: >
-          dotnet test tests/PrintInvoicer.Tests -c Release
+          dotnet test tests/Billament.Tests -c Release
           --logger "trx;LogFileName=unit-tests.trx" --results-directory TestResults
 
       # Same dotnet publish arguments as publish.ps1.
-      - name: Publish PrintInvoicer.exe
+      - name: Publish Billament.exe
         run: >
-          dotnet publish src/PrintInvoicer.App -c Release -r win-x64 --self-contained true
+          dotnet publish src/Billament.App -c Release -r win-x64 --self-contained true
           -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=none -o publish --nologo
 
-      - name: Zip PrintInvoicer.exe and Read me.txt
+      - name: Zip Billament.exe and Read me.txt
         run: |
-          $zip = "PrintInvoicer-${{ steps.version.outputs.version }}.zip"
-          Compress-Archive -LiteralPath 'publish/PrintInvoicer.exe', 'packaging/Read me.txt' -DestinationPath $zip
+          $zip = "Billament-${{ steps.version.outputs.version }}.zip"
+          Compress-Archive -LiteralPath 'publish/Billament.exe', 'packaging/Read me.txt' -DestinationPath $zip
           Add-Type -AssemblyName System.IO.Compression.FileSystem
           $archive = [IO.Compression.ZipFile]::OpenRead((Resolve-Path -LiteralPath $zip).Path)
           try { foreach ($entry in $archive.Entries) { Write-Output "$zip contains: $($entry.FullName) ($($entry.Length) bytes)" } }
@@ -80,7 +80,7 @@ jobs:
 
       - name: Write the SHA-256 checksum file
         run: |
-          $zip = "PrintInvoicer-${{ steps.version.outputs.version }}.zip"
+          $zip = "Billament-${{ steps.version.outputs.version }}.zip"
           $hash = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
           # LF line ending on purpose, in the format sha256sum -c reads; Set-Content would write CRLF.
           [IO.File]::WriteAllText("$zip.sha256", "$hash  $zip`n")
@@ -91,8 +91,8 @@ jobs:
         with:
           name: release-zip
           path: |
-            PrintInvoicer-${{ steps.version.outputs.version }}.zip
-            PrintInvoicer-${{ steps.version.outputs.version }}.zip.sha256
+            Billament-${{ steps.version.outputs.version }}.zip
+            Billament-${{ steps.version.outputs.version }}.zip.sha256
           if-no-files-found: error
           retention-days: 7
 
@@ -127,7 +127,7 @@ jobs:
           VERSION: ${{ needs.build.outputs.version }}
         run: |
           $tag = $env:GITHUB_REF_NAME
-          $zip = "PrintInvoicer-$env:VERSION.zip"
+          $zip = "Billament-$env:VERSION.zip"
           # The line is the hash, two spaces and the zip name; the notes show only the hash.
           $sha = (Get-Content -LiteralPath "$zip.sha256" -TotalCount 1).Split(' ')[0]
           # Includes drafts, which this token can see.
@@ -140,10 +140,10 @@ jobs:
           $notes = @"
           _Draft created by the Release workflow. Replace this text with the release notes, keep the SHA-256 line below, then publish._
 
-          Download $zip, unzip it and run PrintInvoicer.exe. See Read me.txt in the zip for first-time setup.
+          Download $zip, unzip it and run Billament.exe. See Read me.txt in the zip for first-time setup.
 
           SHA-256: $sha
           "@
-          gh release create $tag $zip "$zip.sha256" --draft --verify-tag --title "PrintInvoicer $env:VERSION" --notes $notes
+          gh release create $tag $zip "$zip.sha256" --draft --verify-tag --title "Billament $env:VERSION" --notes $notes
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Write-Output "Draft release created for $tag. Review it on the Releases page and publish it when ready."

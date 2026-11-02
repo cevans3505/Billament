@@ -1,4 +1,4 @@
-# PrintInvoicer
+# Billament
 
 A Windows desktop app for invoicing 3D printing jobs on FDM and resin printers. It reads sliced Bambu Studio and ELEGOO
 resin files, prices material, machine time, electricity and your own extra costs per plate, adds slicing, modeling and
@@ -8,7 +8,7 @@ post-processing fees, and produces a PDF invoice plus an internal detail sheet.
 
 These pictures are made from sample data, so every name in them is made up.
 
-![The PrintInvoicer job list with sample jobs and their totals](docs/images/main-jobs.png)
+![The Billament job list with sample jobs and their totals](docs/images/main-jobs.png)
 
 The job list. Each job stays a draft until you finalize its invoice, and you tick Paid when the customer pays.
 
@@ -22,7 +22,7 @@ and the price breakdown with a friends and family discount and filament the cust
 Page 1 of the invoice the customer receives. Click it to open it full size.
 
 > [!IMPORTANT]
-> **Personal project, shared as-is.** I built PrintInvoicer for my own use, invoicing 3D printing work for a local
+> **Personal project, shared as-is.** I built Billament for my own use, invoicing 3D printing work for a local
 > business. I'm sharing it publicly because I believe in open source and in sharing code for the benefit of everyone.
 > It is not a commercial product and is not actively maintained. I fix what I need, and may add things if enough people
 > ask, but there is no support commitment. It is provided under the [MIT license](LICENSE), "as is", without warranty
@@ -54,42 +54,42 @@ Page 1 of the invoice the customer receives. Click it to open it full size.
 >   dollars.
 > - The program is not code-signed, so Windows will warn that it comes from an unknown publisher.
 >
-> **What it does with your data:** everything stays on your PC, in `Documents\PrintInvoicer`. The only network access
+> **What it does with your data:** everything stays on your PC, in `Documents\Billament`. The only network access
 > is an optional once-a-day check of this repository's releases for a newer version, which can be turned off in
 > Settings. There is no tracking or telemetry.
 >
 > **Use it at your own risk.** Review the code yourself before relying on it, and check its invoices before you send
 > them. **[AUDITING.md](AUDITING.md)** lists every place the program touches the network, other programs or files, and
 > each of those lines in the code is marked `AUDIT:` so they are easy to find. If you find a problem, please
-> [open an issue](https://github.com/cevans3505/PrintInvoicer/issues).
+> [open an issue](https://github.com/cevans3505/Billament/issues).
 
 ## Install or update
 
-From Windows PowerShell, with PrintInvoicer closed:
+From Windows PowerShell, with Billament closed:
 
 ```powershell
 .\publish.ps1
 ```
 
-This runs the tests, builds a self-contained `PrintInvoicer.exe` (no .NET install needed to run it), copies it to
-`%LOCALAPPDATA%\Programs\PrintInvoicer` and adds a **PrintInvoicer** Start menu shortcut.
+This runs the tests, builds a self-contained `Billament.exe` (no .NET install needed to run it), copies it to
+`%LOCALAPPDATA%\Programs\Billament` and adds a **Billament** Start menu shortcut.
 
 Building needs the .NET 10 SDK (`winget install Microsoft.DotNet.SDK.10`).
 
-To set it up on someone else's PC, send them the [latest release](https://github.com/cevans3505/PrintInvoicer/releases/latest).
-The zip holds `PrintInvoicer.exe`, which runs from anywhere and keeps its own data in their `Documents\PrintInvoicer`.
+To set it up on someone else's PC, send them the [latest release](https://github.com/cevans3505/Billament/releases/latest).
+The zip holds `Billament.exe`, which runs from anywhere and keeps its own data in their `Documents\Billament`.
 
 ### Verify a download
 
-Each release lists the SHA-256 checksum of its zip in the release notes, and in a `PrintInvoicer-<version>.zip.sha256`
+Each release lists the SHA-256 checksum of its zip in the release notes, and in a `Billament-<version>.zip.sha256`
 file attached next to the zip. To check a download, open PowerShell in the folder that holds the zip and run:
 
 ```powershell
-Get-FileHash .\PrintInvoicer-<version>.zip -Algorithm SHA256
+Get-FileHash .\Billament-<version>.zip -Algorithm SHA256
 ```
 
 Compare the `Hash` it prints with the release notes (case does not matter). On Linux or macOS,
-`sha256sum -c PrintInvoicer-<version>.zip.sha256` does the same check.
+`sha256sum -c Billament-<version>.zip.sha256` does the same check.
 
 A matching checksum shows the zip downloaded completely and is the file the release notes describe. It does not prove
 who built it: the checksum is published in the same place as the zip, and releases are not code-signed. To be sure a
@@ -100,7 +100,7 @@ download matches this source, build it yourself from the tag (see [AUDITING.md](
 When the app starts it asks GitHub, at most once a day, whether a newer release exists, and shows a bar at the top of
 the window if so. **Download** opens the release page; nothing is downloaded or installed automatically. **Later** hides
 the bar until the next start. Settings has the on/off switch and a **Check now** button. The last answer is kept in
-`%LOCALAPPDATA%\PrintInvoicer\update-check.json`.
+`%LOCALAPPDATA%\Billament\update-check.json`.
 
 Only published releases are seen, so a new version reaches other installs once its release is published. Releases are
 built on GitHub, not on a PC: pushing a `v<version>` tag builds the zip and creates a **draft** release, which stays
@@ -177,15 +177,15 @@ match the other and save.
 
 ## Data
 
-Everything lives in `Documents\PrintInvoicer\printinvoicer.db` (SQLite). PDFs go to `Documents\PrintInvoicer\Invoices`
+Everything lives in `Documents\Billament\billament.db` (SQLite). PDFs go to `Documents\Billament\Invoices`
 unless changed in Settings.
 
-**Backups:** each day the app first opens, it copies the database to `Documents\PrintInvoicer\Backups` and keeps the
+**Backups:** each day the app first opens, it copies the database to `Documents\Billament\Backups` and keeps the
 newest 14 daily copies, plus any made with **Back up now** (never pruned). Set **Back up to** in Settings to a NAS or
 cloud-synced folder so the copies survive a failed drive. **Restore a backup...** replaces all data with a chosen copy,
 saving the current data first as a `before-restore` copy, and restarts the app. Copies are ordinary SQLite files.
 
-Window sizes and positions are remembered per PC in `%LOCALAPPDATA%\PrintInvoicer\window-layout.json`. Delete it to go
+Window sizes and positions are remembered per PC in `%LOCALAPPDATA%\Billament\window-layout.json`. Delete it to go
 back to the default layout.
 
 The `.goo` reader follows ELEGOO's published [GOO format spec](https://github.com/elegooofficial/GOO).
@@ -193,15 +193,15 @@ The `.goo` reader follows ELEGOO's published [GOO format spec](https://github.co
 ## Development
 
 ```powershell
-dotnet test PrintInvoicer.sln
-dotnet run --project src\PrintInvoicer.App
+dotnet test Billament.sln
+dotnet run --project src\Billament.App
 ```
 
-- `src/PrintInvoicer.Core`: file reader (`Slicing/BambuFileReader.cs`), pricing (`Pricing/PricingCalculator.cs`), storage (`Data/Database.cs`)
-- `src/PrintInvoicer.App`: WPF UI and QuestPDF invoices
-- `tests/PrintInvoicer.Tests`: pricing, file readers, storage, backups; includes a regression test that matches the CS-001
+- `src/Billament.Core`: file reader (`Slicing/BambuFileReader.cs`), pricing (`Pricing/PricingCalculator.cs`), storage (`Data/Database.cs`)
+- `src/Billament.App`: WPF UI and QuestPDF invoices
+- `tests/Billament.Tests`: pricing, file readers, storage, backups; includes a regression test that matches the CS-001
   job from the original costing workbook
-- `tests/PrintInvoicer.UiTests`: opens the real windows and renders every invoice kind on sample data, offscreen (nothing
+- `tests/Billament.UiTests`: opens the real windows and renders every invoice kind on sample data, offscreen (nothing
   appears on screen), and fails on any WPF binding error. Screenshots land in its `bin\...\screens` folder for a look.
   `publish.ps1` runs both test projects before building.
 - `docs/images`: the README pictures, rebuilt by `make-readme-images.ps1` (see below)
@@ -213,14 +213,14 @@ screen-test screenshots are attached to the run as artifacts.
 ### Regenerating the README images
 
 The three pictures at the top of this README (`docs/images`) are made from the sample shop the screen tests use,
-`tests/PrintInvoicer.UiTests/SampleShop.cs`. After a change to the windows, the invoice layout or the sample data,
+`tests/Billament.UiTests/SampleShop.cs`. After a change to the windows, the invoice layout or the sample data,
 rebuild them from Windows PowerShell in the repository folder:
 
 ```powershell
 .\make-readme-images.ps1
 ```
 
-It runs one screen test, `ReadmeImageTests`, offscreen, so no window appears and PrintInvoicer can stay open. It
+It runs one screen test, `ReadmeImageTests`, offscreen, so no window appears and Billament can stay open. It
 rewrites `main-jobs.png`, `job-editor.png` and `invoice-page-1.png`, and stops with an error if any of them was not
 rebuilt. A normal `dotnet test` run, `publish.ps1` and CI never write to `docs/images`; they only render the pictures
 into the test's `bin\...\screens\readme` folder.
@@ -231,7 +231,7 @@ on the same PC as the last one.
 
 ### Making a release
 
-1. Bump `<Version>` in `src/PrintInvoicer.App/PrintInvoicer.App.csproj` (for example `3.5.0`), and the heading in
+1. Bump `<Version>` in `src/Billament.App/Billament.App.csproj` (for example `3.5.0`), and the heading in
    `packaging/Read me.txt` if the major or minor number changed. Commit and push to `main`, and wait for CI to pass.
 2. Tag that commit with `v` plus the exact version and push the tag:
 
@@ -241,9 +241,9 @@ on the same PC as the last one.
    ```
 
 3. The **Release** workflow (`.github/workflows/release.yml`) checks the tag matches `<Version>` (and stops with an
-   error if not), runs the unit tests, builds `PrintInvoicer.exe` with the same `dotnet publish` settings as
-   `publish.ps1`, zips it with `Read me.txt` into `PrintInvoicer-<version>.zip`, writes the zip's SHA-256 checksum to
-   `PrintInvoicer-<version>.zip.sha256`, and creates a **draft** release for the tag with both files attached and the
+   error if not), runs the unit tests, builds `Billament.exe` with the same `dotnet publish` settings as
+   `publish.ps1`, zips it with `Read me.txt` into `Billament-<version>.zip`, writes the zip's SHA-256 checksum to
+   `Billament-<version>.zip.sha256`, and creates a **draft** release for the tag with both files attached and the
    checksum in the draft notes. Follow it on the repository's **Actions** tab.
 4. On the **Releases** page, open the draft, check the zip and the `.sha256` file, and replace the placeholder text
    with the release notes. Keep the `SHA-256:` line from the draft in the notes, so people can check their download
@@ -258,10 +258,10 @@ If a draft for the tag already exists, delete the draft first; the workflow will
 ## License
 
 MIT. See [LICENSE](LICENSE).
-The MIT license covers PrintInvoicer's own code.
+The MIT license covers Billament's own code.
 
-The invoices are laid out with [QuestPDF](https://www.questpdf.com/), which PrintInvoicer uses under QuestPDF's free
-Community license (set in `src/PrintInvoicer.App/App.xaml.cs`). Whether you may use it that way is decided by QuestPDF's
+The invoices are laid out with [QuestPDF](https://www.questpdf.com/), which Billament uses under QuestPDF's free
+Community license (set in `src/Billament.App/App.xaml.cs`). Whether you may use it that way is decided by QuestPDF's
 terms, not by this project. As stated on [QuestPDF's license page](https://www.questpdf.com/license/community.html) when
 this was written (November 2026, Community License version 3.0, effective 6 July 2026), individuals and businesses can
 use the Community license only with annual gross revenue under USD 1,000,000 (an organization counts the revenue of

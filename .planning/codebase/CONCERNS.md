@@ -16,7 +16,7 @@ roughly by how much they matter to the user's money and data, not by how hard th
 - Issue: `Database` constructor calls `FreezeFinalizedJobs`, which gives any finalized job with no snapshot today's
   prices. This covers invoices finalized before snapshots existed. Those invoices were never frozen under the prices
   they were sent with, so whatever prices are current at the first start after upgrade become their record.
-- Files: `src/PrintInvoicer.Core/Data/Database.cs` (`FreezeFinalizedJobs`, lines ~36-56, called from the constructor)
+- Files: `src/Billament.Core/Data/Database.cs` (`FreezeFinalizedJobs`, lines ~36-56, called from the constructor)
 - Impact: If a legacy invoice was sent under older rates, its frozen total can silently differ from what the customer
   received. The method also runs a query on every open, though it does nothing once all finalized jobs have snapshots.
 - Fix approach: Leave the behavior alone for invoices already frozen (they must not change). Record in the database
@@ -25,11 +25,11 @@ roughly by how much they matter to the user's money and data, not by how hard th
   legacy finalized job gets a snapshot exactly once.
 
 **Revert to draft and re-finalize reprices the invoice:**
-- Issue: `Job.Revert` (`src/PrintInvoicer.Core/Models/Job.cs`, ~lines 75-81) clears `Finalized`, the snapshot and the
-  frozen total. `JobEditorViewModel` (`src/PrintInvoicer.App/ViewModels/JobEditorViewModel.cs`, ~line 469) asks the
+- Issue: `Job.Revert` (`src/Billament.Core/Models/Job.cs`, ~lines 75-81) clears `Finalized`, the snapshot and the
+  frozen total. `JobEditorViewModel` (`src/Billament.App/ViewModels/JobEditorViewModel.cs`, ~line 469) asks the
   user first, then reprices at today's rates. This is intended, but the old PDF and the new total can diverge, and
   nothing in the database keeps the earlier invoice record.
-- Files: `src/PrintInvoicer.Core/Models/Job.cs`, `src/PrintInvoicer.App/ViewModels/JobEditorViewModel.cs`
+- Files: `src/Billament.Core/Models/Job.cs`, `src/Billament.App/ViewModels/JobEditorViewModel.cs`
 - Impact: A customer who received an invoice may be sent a different total later. The confirmation prompt is the only
   guard.
 - Fix approach: Keep the confirmation. Consider keeping the last frozen snapshot and total in a history table (new
@@ -49,7 +49,7 @@ roughly by how much they matter to the user's money and data, not by how hard th
 - Issue: There is no schema version number. Upgrades are a list of `AddColumnIfMissing` calls and `CREATE TABLE IF
   NOT EXISTS` in `EnsureCreated` (`Database.cs`, ~lines 81-151). Older builds would open a newer database without
   complaint and silently ignore the new columns.
-- Files: `src/PrintInvoicer.Core/Data/Database.cs`
+- Files: `src/Billament.Core/Data/Database.cs`
 - Impact: Running an older release against a database written by a newer one can drop features that depend on the new
   columns (for example snapshot handling) without any warning. Backups from a newer version restored into an older
   build have the same problem.
@@ -60,15 +60,15 @@ roughly by how much they matter to the user's money and data, not by how hard th
 - Issue: Prices, discount and totals are stored as `TEXT` (for example `discount_percent TEXT NOT NULL DEFAULT '0'`,
   `finalized_total TEXT`) and parsed with `Dec(...)` / `Str(...)`. `Database.cs` catches `FormatException` and
   `OverflowException` around parsing (~line 240).
-- Files: `src/PrintInvoicer.Core/Data/Database.cs`
+- Files: `src/Billament.Core/Data/Database.cs`
 - Impact: Works, but a damaged value is handled by a catch that may hide the problem. Anything that sorts or sums these
   values in SQL will sort text, not numbers.
 - Fix approach: Leave existing data as is. For new columns, consider integer minor units. Do not change existing
   columns (frozen data depends on them).
 
 **Explorer and Process.Start arguments built by string concatenation:**
-- Issue: `SettingsViewModel.OpenFolder` (`src/PrintInvoicer.App/ViewModels/SettingsViewModel.cs`, ~line 186) passes
-  `"\"{path}\""` and `ErrorReport.Show` (`src/PrintInvoicer.App/ErrorReport.cs`, ~line 60) passes
+- Issue: `SettingsViewModel.OpenFolder` (`src/Billament.App/ViewModels/SettingsViewModel.cs`, ~line 186) passes
+  `"\"{path}\""` and `ErrorReport.Show` (`src/Billament.App/ErrorReport.cs`, ~line 60) passes
   `/select,"{path}"` to `explorer.exe`. A folder or path that contains a double quote breaks the argument list.
 - Files: as listed.
 - Impact: Low. The paths come from the user's own settings or the app's own folders, and the calls only open Explorer.
@@ -93,16 +93,16 @@ be checked by running the app:
 **Stale window after a backup restore:**
 - Symptoms: After **Restore a backup**, open windows could still show data from before the restore until the app
   restarts.
-- Files: `src/PrintInvoicer.App/ViewModels/SettingsViewModel.cs` (`RestoreBackup`, ~line 109-118),
-  `src/PrintInvoicer.Core/Data/DatabaseBackup.cs` (`Restore`).
+- Files: `src/Billament.App/ViewModels/SettingsViewModel.cs` (`RestoreBackup`, ~line 109-118),
+  `src/Billament.Core/Data/DatabaseBackup.cs` (`Restore`).
 - Trigger: Restore a backup while other windows are open.
 - Workaround: The restore prompts for a restart (`Process.Start` of the same executable), which clears this.
   Verify the restart happens before any further save, so old in-memory data is not written over the restored database.
 
 **Backup folder and backup run at startup can overlap:**
 - Symptoms: Two backup runs on the same day could contend for the same `*.partial` file.
-- Files: `src/PrintInvoicer.Core/Data/DatabaseBackup.cs` (`Copy`, which deletes and reuses `target + ".partial"`),
-  `src/PrintInvoicer.App/App.xaml.cs` (`BackUpTodayAsync` on `Task.Run`).
+- Files: `src/Billament.Core/Data/DatabaseBackup.cs` (`Copy`, which deletes and reuses `target + ".partial"`),
+  `src/Billament.App/App.xaml.cs` (`BackUpTodayAsync` on `Task.Run`).
 - Trigger: A manual backup clicked while the startup daily backup is still running, if both use the same target name.
 - Workaround: None needed in normal use. Confirm the manual backup name differs from the daily name.
 
@@ -110,7 +110,7 @@ be checked by running the app:
 
 **Network access is limited and well marked:**
 - Risk: Only one outbound request exists (`UpdateService.FetchLatestAsync`, `api.github.com`). It is marked `AUDIT:`.
-- Files: `src/PrintInvoicer.App/UpdateService.cs`
+- Files: `src/Billament.App/UpdateService.cs`
 - Current mitigation: Download only opens URLs that start with this repository's GitHub path. The response is read for two
   fields. The request has a 10-second timeout.
 - Recommendations: The response stream is not size-capped before deserialization. A capped read (for example 256 KB)
@@ -125,18 +125,18 @@ be checked by running the app:
 
 **File readers are the main untrusted-input surface:**
 - Risk: Sliced files (`.gcode.3mf`, `.gcode`, `.goo`) are parsed from outside the program.
-- Files: `src/PrintInvoicer.Core/Slicing/BambuFileReader.cs`, `src/PrintInvoicer.Core/Slicing/GooFileReader.cs`,
-  `src/PrintInvoicer.Core/Slicing/SliceLimits.cs`.
+- Files: `src/Billament.Core/Slicing/BambuFileReader.cs`, `src/Billament.Core/Slicing/GooFileReader.cs`,
+  `src/Billament.Core/Slicing/SliceLimits.cs`.
 - Current mitigation: Entry size caps (`MaxMetadataBytes`, `MaxImageBytes`), header character cap
   (`MaxGcodeHeaderChars`), XML parser with DTD and external references off, range checks on every value, and robustness
-  tests (`tests/PrintInvoicer.Tests/*RobustnessTests.cs`). The readers raise `InvalidDataException`.
+  tests (`tests/Billament.Tests/*RobustnessTests.cs`). The readers raise `InvalidDataException`.
 - Recommendations: Check that every new reader path throws only `InvalidDataException` for bad input. Check that the
   ZIP reader caps the total uncompressed size across all entries, not only per entry (not verified by this review).
 
 **Restore accepts any database that has the three main tables:**
-- Risk: `DatabaseBackup.LooksLikePrintInvoicer` checks only that `jobs`, `settings` and `plates` exist. A file that is
+- Risk: `DatabaseBackup.LooksLikeBillament` checks only that `jobs`, `settings` and `plates` exist. A file that is
   a valid SQLite database with those names passes the check and replaces the live data.
-- Files: `src/PrintInvoicer.Core/Data/DatabaseBackup.cs`.
+- Files: `src/Billament.Core/Data/DatabaseBackup.cs`.
 - Current mitigation: `PRAGMA integrity_check`, and a backup of the current data before the copy.
 - Recommendations: Also check the schema version once it exists (see Tech Debt), and the column list for the tables
   the app reads. The restore is user-initiated, so this is a low risk.
@@ -144,7 +144,7 @@ be checked by running the app:
 **Output file and folder names come from user data:**
 - Risk: Invoice file names are built from customer and invoice fields. A name with characters Windows rejects, or a
   reserved name such as `CON`, could fail or write somewhere unexpected.
-- Files: `src/PrintInvoicer.App/Pdf/InvoicePdf.cs` (`Write`), `src/PrintInvoicer.App/ViewModels/MainViewModel.cs`
+- Files: `src/Billament.App/Pdf/InvoicePdf.cs` (`Write`), `src/Billament.App/ViewModels/MainViewModel.cs`
   (`GenerateInvoices`, ~line 407-424).
 - Current mitigation: Not verified by this review. Check that file names are sanitized (`Path.GetInvalidFileNameChars`).
 - Recommendations: Sanitize and length-limit every name derived from user input, with a test that includes `..`,
@@ -155,7 +155,7 @@ be checked by running the app:
 **Job list loads every job on each reload:**
 - Problem: `MainViewModel` calls `_db.GetJobs()` in several places (for example ~line 161 and ~line 238). `GetJobs`
   (`Database.cs`, ~line 638) returns all jobs with their snapshot strings.
-- Files: `src/PrintInvoicer.App/ViewModels/MainViewModel.cs`, `src/PrintInvoicer.Core/Data/Database.cs`
+- Files: `src/Billament.App/ViewModels/MainViewModel.cs`, `src/Billament.Core/Data/Database.cs`
 - Cause: No paging or caching. Snapshots are stored as JSON text per finalized job, so the data grows with history.
 - Improvement path: Not measured. Time the list with a few hundred jobs before changing anything. If slow, load the
   snapshot column only when an invoice is opened, and page the list.
@@ -163,15 +163,15 @@ be checked by running the app:
 **Repeated pricing on each change:**
 - Problem: `PricingCalculator.Calculate` runs on the whole job when any field changes in `JobEditorViewModel` and
   `PartViewModel`.
-- Files: `src/PrintInvoicer.Core/Pricing/PricingCalculator.cs`, `src/PrintInvoicer.App/ViewModels/JobEditorViewModel.cs`
+- Files: `src/Billament.Core/Pricing/PricingCalculator.cs`, `src/Billament.App/ViewModels/JobEditorViewModel.cs`
 - Cause: Calculation is cheap for typical jobs, so this is only a concern for very large part lists.
 - Improvement path: Not measured. Only address this if a real job is slow.
 
 ## Fragile Areas
 
 **Pricing rules and frozen snapshots:**
-- Files: `src/PrintInvoicer.Core/Pricing/PriceBook.cs` (`PricingRules`, `RulesVersion`),
-  `src/PrintInvoicer.Core/Pricing/PriceSnapshot.cs`, `src/PrintInvoicer.Core/Pricing/PricingCalculator.cs` (`v2` branch, ~line 122).
+- Files: `src/Billament.Core/Pricing/PriceBook.cs` (`PricingRules`, `RulesVersion`),
+  `src/Billament.Core/Pricing/PriceSnapshot.cs`, `src/Billament.Core/Pricing/PricingCalculator.cs` (`v2` branch, ~line 122).
 - Why fragile: `PriceBook.RulesVersion` defaults to `PricingRules.Current`. Any edit to calculation code that is not
   behind a version check changes every invoice that is re-priced, including drafts reverted from finalized. Snapshots
   store `RulesVersion` in full. Snapshots written before it was recorded are read back as version 1 (`PriceSnapshot.cs`).
@@ -181,7 +181,7 @@ be checked by running the app:
   created by an old build (no test found for this path).
 
 **Invoice PDFs are re-rendered from current code:**
-- Files: `src/PrintInvoicer.App/Pdf/InvoicePdf.cs`, QuestPDF (package version in `src/PrintInvoicer.App/PrintInvoicer.App.csproj`).
+- Files: `src/Billament.App/Pdf/InvoicePdf.cs`, QuestPDF (package version in `src/Billament.App/Billament.App.csproj`).
 - Why fragile: A finalized invoice's amounts are frozen, but its layout is not. Changing the layout code or upgrading
   QuestPDF changes how an old invoice looks when it is printed again.
 - Safe modification: Treat layout changes as visible changes. Keep totals and line amounts reading only from the snapshot,
@@ -189,7 +189,7 @@ be checked by running the app:
 - Test coverage: `InvoicePdfTests` do not exist under that name; `InvoicePdf` is referenced by one test file only.
 
 **Restarting the app as part of restore:**
-- Files: `src/PrintInvoicer.App/ViewModels/SettingsViewModel.cs` (~line 118).
+- Files: `src/Billament.App/ViewModels/SettingsViewModel.cs` (~line 118).
 - Why fragile: The restart runs `Environment.ProcessPath` directly. In a debug run or a moved install, the path may not
   be the expected executable.
 - Safe modification: Check the behavior after a restore from both an installed copy and a `dotnet run` session.
@@ -197,7 +197,7 @@ be checked by running the app:
 ## Scaling Limits
 
 **Local SQLite file only:**
-- Current capacity: One user, one PC, one `printinvoicer.db` in `Documents\PrintInvoicer\`.
+- Current capacity: One user, one PC, one `billament.db` in `Documents\Billament\`.
 - Limit: No sharing between PCs, no multi-user access. Two running copies of the app on one database are not guarded.
 - Scaling path: Not planned. If two copies must be supported, add a lock file or single-instance check (not present).
 
@@ -219,13 +219,13 @@ be checked by running the app:
 - Risk: Native `e_sqlite3.dll` ships with the app. Updating it changes database behavior.
 - Impact: Low for normal use. Watch for SQLite changes around `PRAGMA integrity_check` and `BackupDatabase`, both used in
   backups.
-- Migration plan: Keep the package pinned in `PrintInvoicer.Core.csproj`, and run `DatabaseBackup` tests on each update.
+- Migration plan: Keep the package pinned in `Billament.Core.csproj`, and run `DatabaseBackup` tests on each update.
 
 ## Missing Critical Features
 
 **No crash recovery for an in-progress job:**
 - Problem: Unsaved edits in `JobEditorWindow` are lost if the app crashes before **Save**. The error handler saves a
-  report to `%LOCALAPPDATA%\PrintInvoicer\Errors\` but not the job.
+  report to `%LOCALAPPDATA%\Billament\Errors\` but not the job.
 - Blocks: Recovering a half-entered job after a crash.
 
 **No way to check the database for corruption from the UI:**
@@ -238,9 +238,9 @@ be checked by running the app:
 - What's not tested: `MainViewModel`, `PartViewModel`, `InvoicePrinter`, `PlateImages`, `ErrorReport`, `SeedData` have
   no test file that references them. `UpdateService`, `WindowLayout`, `InvoicePdf`, `JobEditorViewModel` and
   `SettingsViewModel` are referenced by one test file each.
-- Files: `src/PrintInvoicer.App/ViewModels/MainViewModel.cs`, `src/PrintInvoicer.App/ViewModels/PartViewModel.cs`,
-  `src/PrintInvoicer.App/Pdf/InvoicePrinter.cs`, `src/PrintInvoicer.App/Pdf/PlateImages.cs`,
-  `src/PrintInvoicer.App/ErrorReport.cs`, `src/PrintInvoicer.Core/Data/SeedData.cs`.
+- Files: `src/Billament.App/ViewModels/MainViewModel.cs`, `src/Billament.App/ViewModels/PartViewModel.cs`,
+  `src/Billament.App/Pdf/InvoicePrinter.cs`, `src/Billament.App/Pdf/PlateImages.cs`,
+  `src/Billament.App/ErrorReport.cs`, `src/Billament.Core/Data/SeedData.cs`.
 - Risk: Changes to invoice generation, finalize and print flow can break without a test failing. The App project runs
   only on Windows, so Linux CI cannot exercise it.
 - Priority: High for `MainViewModel` (finalize and generate paths) and `InvoicePdf` (what the customer sees).
@@ -249,7 +249,7 @@ be checked by running the app:
 **Legacy-database upgrade path:**
 - What's not tested: A database created by an older release, opened by the current build, with finalized jobs that
   have no snapshot. This is the path `FreezeFinalizedJobs` takes on real user data.
-- Files: `src/PrintInvoicer.Core/Data/Database.cs`, `tests/PrintInvoicer.Tests/PriceSnapshotTests.cs`.
+- Files: `src/Billament.Core/Data/Database.cs`, `tests/Billament.Tests/PriceSnapshotTests.cs`.
 - Risk: A regression here changes the totals of invoices already sent.
 - Priority: High. Add a fixture database built from the schema before snapshots.
 
