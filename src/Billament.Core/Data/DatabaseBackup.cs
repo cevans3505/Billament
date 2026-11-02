@@ -8,12 +8,16 @@ namespace Billament.Core.Data;
 /// Copies of the database. The app makes one a day when it opens and keeps the newest <see cref="KeepDaily"/>; copies
 /// made by hand or before a restore are never pruned. Copies use SQLite's backup API, so they are consistent even while
 /// the app has the database open, and are written to a temporary name first so a dropped network share never leaves a
-/// half-written backup behind.
+/// half-written backup behind. Copies are named billament-..., and copies made before 4.0 (printinvoicer-...) are
+/// listed, restored and pruned the same way.
 /// </summary>
 public static partial class DatabaseBackup
 {
     public const int KeepDaily = 14;
     private const string Prefix = "billament-";
+
+    // Backups made before 4.0, when the app was called PrintInvoicer. They are still listed, restored and pruned.
+    private const string LegacyPrefix = "printinvoicer-";
 
     /// <summary>The Backups folder next to the database, used when no backup folder is set in Settings.</summary>
     public static string DefaultFolder(string dbPath) => Path.Combine(Path.GetDirectoryName(Path.GetFullPath(dbPath))!, "Backups");
@@ -39,8 +43,14 @@ public static partial class DatabaseBackup
     /// <summary>Every backup in the folder, newest first.</summary>
     public static IReadOnlyList<FileInfo> List(string folder) =>
         Directory.Exists(folder)
-            ? new DirectoryInfo(folder).GetFiles(Prefix + "*.db").OrderByDescending(f => f.LastWriteTimeUtc).ToList()
+            ? new DirectoryInfo(folder).GetFiles("*.db").Where(f => IsBackupName(f.Name)).OrderByDescending(f => f.LastWriteTimeUtc).ToList()
             : [];
+
+    // True for billament-*.db and printinvoicer-*.db. GetFiles lists files only, so a folder with such a name is never
+    // returned, and the temporary .partial names never end in .db.
+    private static bool IsBackupName(string name) =>
+        name.EndsWith(".db", StringComparison.OrdinalIgnoreCase)
+        && (name.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase) || name.StartsWith(LegacyPrefix, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>Deletes all but the newest <paramref name="keep"/> daily backups.</summary>
     public static void Prune(string folder, int keep = KeepDaily)

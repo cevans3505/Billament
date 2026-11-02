@@ -88,7 +88,6 @@ public static class DataFolderMigration
         string oldDb = Path.Combine(folders.OldDocuments, DataFolders.OldDatabaseName);
         string movedOldDb = Path.Combine(folders.NewDocuments, DataFolders.OldDatabaseName);
         string movedNewDb = Path.Combine(folders.NewDocuments, DataFolders.NewDatabaseName);
-        var comparison = pathComparison ?? (OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         bool renamed = false;
 
         // An earlier start moved the folder but could not rename the database inside it: finish that, touching only
@@ -210,7 +209,7 @@ public static class DataFolderMigration
         {
             try
             {
-                RewriteFolderSettings(movedNewDb, folders, comparison);
+                UpdateFolderSettings(movedNewDb, folders, pathComparison);
             }
             catch (Exception ex) when (ex is SqliteException or IOException or UnauthorizedAccessException)
             {
@@ -223,9 +222,6 @@ public static class DataFolderMigration
 
         return new DataMoveResult(documents.Value, local.Value, backup, null, notice, error);
     }
-
-    /// <summary>Placeholder for the failing tests; replaced by the real rewrite in the next commit.</summary>
-    public static bool UpdateFolderSettings(string databasePath, DataFolders folders, StringComparison? pathComparison = null) => false;
 
     /// <summary>
     /// The same place under the new data folder when <paramref name="value"/> is the old data folder or a folder inside
@@ -258,12 +254,17 @@ public static class DataFolderMigration
         return value;
     }
 
-    // Points BackupFolder and InvoiceFolder at the new place when they are inside the old data folder. Raw SQL on
-    // those two keys only (the Database class's whole-settings load and save would read and write every setting, and
-    // a bad value elsewhere would stop the load), and the file is opened for writing only when a value really changes.
-    // Returns true when a value changed.
-    private static bool RewriteFolderSettings(string databasePath, DataFolders folders, StringComparison comparison)
+    /// <summary>
+    /// Points a BackupFolder or InvoiceFolder setting that is inside the old data folder at the same place in the new
+    /// one. Returns true when a value changed; throws SqliteException, IOException or UnauthorizedAccessException.
+    /// Used right after the move and after a backup from before 4.0 is restored. Raw SQL on those two keys only (the
+    /// Database class's whole-settings load and save would read and write every setting, and a bad value elsewhere
+    /// would stop the load), and the file is opened for writing only when a value really changes.
+    /// </summary>
+    /// <param name="pathComparison">Whether letter case counts; default: not on Windows, yes elsewhere.</param>
+    public static bool UpdateFolderSettings(string databasePath, DataFolders folders, StringComparison? pathComparison = null)
     {
+        var comparison = pathComparison ?? (OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         var changes = new List<(string Key, string Value)>();
         using (var read = OpenDatabase(databasePath, readOnly: true))
         {

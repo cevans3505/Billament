@@ -93,7 +93,7 @@ public partial class SettingsViewModel : ObservableObject
         var dlg = new Microsoft.Win32.OpenFileDialog
         {
             Title = "Restore a backup",
-            Filter = "Billament backups (billament-*.db)|billament-*.db|All databases (*.db)|*.db",
+            Filter = "Billament backups (billament-*.db, printinvoicer-*.db)|billament-*.db;printinvoicer-*.db|All databases (*.db)|*.db",
             InitialDirectory = Directory.Exists(BackupFolder) ? BackupFolder : Path.GetDirectoryName(_db.FilePath),
         };
         if (dlg.ShowDialog() != true) return;
@@ -113,6 +113,21 @@ public partial class SettingsViewModel : ObservableObject
         {
             MessageBox.Show($"The backup was not restored: {ex.Message}", "Restore a backup", MessageBoxButton.OK, MessageBoxImage.Error);
             return;
+        }
+
+        // A backup from before 4.0 may name a backup or invoice folder inside the old data folder; point it at the
+        // moved one. The restore stands either way. Nothing saves settings between here and the restart.
+        try
+        {
+            DataFolderMigration.UpdateFolderSettings(_db.FilePath, DataFolders.Under(
+                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Microsoft.Data.Sqlite.SqliteException)
+        {
+            MessageBox.Show("The backup was restored, but Billament could not update the backup or invoice folder from it. " +
+                            "Check the backup and invoice folders on the Settings tab. Billament restarts now.",
+                "Restore a backup", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         // AUDIT: opens a program. Starts Billament itself again after a restore, then this copy closes.

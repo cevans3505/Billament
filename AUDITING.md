@@ -64,7 +64,9 @@ quote or a space stays one argument.
 | `settings` rows `BackupFolder` and `InvoiceFolder` in `Documents\Billament\billament.db` | Once, right after the database rename: a folder set in Settings that is `Documents\PrintInvoicer` or inside it is changed to the same place inside `Documents\Billament`; any other value is left exactly as it is. The file is opened for writing only when one of these two values changes, and nothing else in it is written | `DataFolderMigration.Run` |
 
 **Restoring a backup** (Settings, after a confirmation) replaces the database's contents with the chosen backup. The
-current data is backed up first, and a damaged backup is refused.
+current data is backed up first, and a damaged backup is refused. Right after a restore, the same two settings rows
+(`BackupFolder` and `InvoiceFolder`) are pointed at `Documents\Billament` if the backup has them inside
+`Documents\PrintInvoicer` (`DataFolderMigration.UpdateFolderSettings`); nothing else in the restored file is written.
 
 **The one-time move in 4.0.** The app was called PrintInvoicer before 4.0. On the first start of 4.0 it copies the old
 database, then renames the old data folders to the new names as listed above. If the Documents folder cannot be moved,
