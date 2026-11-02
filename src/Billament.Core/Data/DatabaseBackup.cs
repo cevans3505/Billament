@@ -22,11 +22,11 @@ public static partial class DatabaseBackup
     /// <summary>The Backups folder next to the database, used when no backup folder is set in Settings.</summary>
     public static string DefaultFolder(string dbPath) => Path.Combine(Path.GetDirectoryName(Path.GetFullPath(dbPath))!, "Backups");
 
-    /// <summary>Makes today's backup unless one exists, then prunes old daily ones. Returns the new file, or null.</summary>
+    /// <summary>Makes today's backup unless one exists under either name, then prunes old daily ones. Returns the new file, or null.</summary>
     public static string? DailyIfDue(string dbPath, string folder, DateTime now, int keep = KeepDaily)
     {
         string path = Path.Combine(folder, $"{Prefix}{now:yyyy-MM-dd}.db");
-        if (File.Exists(path)) return null;
+        if (File.Exists(path) || File.Exists(Path.Combine(folder, $"{LegacyPrefix}{now:yyyy-MM-dd}.db"))) return null;
         Copy(dbPath, path);
         Prune(folder, keep);
         return path;
@@ -52,14 +52,19 @@ public static partial class DatabaseBackup
         name.EndsWith(".db", StringComparison.OrdinalIgnoreCase)
         && (name.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase) || name.StartsWith(LegacyPrefix, StringComparison.OrdinalIgnoreCase));
 
-    /// <summary>Deletes all but the newest <paramref name="keep"/> daily backups.</summary>
+    /// <summary>Deletes all but the newest <paramref name="keep"/> daily backups, under either name, by the date in the name.</summary>
     public static void Prune(string folder, int keep = KeepDaily)
     {
+        // The date in the name, not the file time and not the whole name: with two prefixes, sorting whole names would
+        // put every printinvoicer-* file ahead of every billament-* file whatever its date.
         var daily = List(folder)
-            .Where(f => DailyName().IsMatch(f.Name))
-            .OrderByDescending(f => f.Name, StringComparer.Ordinal)   // the date in the name, not the file time
+            .Select(f => (File: f, Match: DailyName().Match(f.Name)))
+            .Where(x => x.Match.Success)
+            .OrderByDescending(x => x.Match.Groups["date"].Value, StringComparer.Ordinal)
+            .ThenByDescending(x => x.File.Name, StringComparer.Ordinal)
+            .Select(x => x.File)
             .Skip(keep);
-        // AUDIT: file delete. Removes the oldest daily backups (billament-YYYY-MM-DD.db) in the backup folder only.
+        // AUDIT: file delete. Removes the oldest daily backups (billament-YYYY-MM-DD.db, or printinvoicer-YYYY-MM-DD.db from before 4.0) in the backup folder only.
         foreach (var f in daily) f.Delete();
     }
 
@@ -161,7 +166,7 @@ public static partial class DatabaseBackup
         return c;
     }
 
-    [GeneratedRegex(@"^billament-\d{4}-\d{2}-\d{2}\.db$")]
-    // Daily backups are named billament-YYYY-MM-DD.db; only these are pruned.
+    [GeneratedRegex(@"^(?:billament|printinvoicer)-(?<date>\d{4}-\d{2}-\d{2})\.db$")]
+    // Daily backups are named billament-YYYY-MM-DD.db (printinvoicer-YYYY-MM-DD.db before 4.0); only these are pruned.
     private static partial Regex DailyName();
 }
