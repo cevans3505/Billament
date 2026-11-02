@@ -91,4 +91,47 @@ public sealed class LegacyDatabaseTests : IDisposable
         c.Open();
         Assert.Equal(2L, Count(c, "SELECT COUNT(*) FROM pragma_table_info('jobs') WHERE name IN ('price_snapshot', 'finalized_total')"));
     }
+
+    [Fact]
+    public void Frozen_invoices_keep_their_snapshot_through_price_changes_and_reopening()
+    {
+        CreateFixtureDatabase();
+        var db = new Database(_path);
+        var first = db.GetJobs().Where(j => j.Finalized).ToDictionary(j => j.Id, j => j.PriceSnapshot);
+        Assert.Equal(2, first.Count);
+
+        // Change every price the invoices depend on, through the public API only.
+        var filament = db.GetFilaments().Single();
+        filament.SpoolPrice = 30m;
+        db.SaveFilament(filament);
+        var printer = db.GetPrinters().Single();
+        printer.MachineRatePerHour = 3m;
+        db.SavePrinter(printer);
+        var settings = db.LoadSettings();
+        settings.ElectricityPerKwh = 0.30m;
+        settings.SlicingFeePerPart = 12m;
+        db.SaveSettings(settings);
+
+        // Each open runs the one-time freeze again; it must leave frozen invoices alone.
+        _ = new Database(_path);
+        var reopened = new Database(_path);
+
+        foreach (var job in reopened.GetJobs().Where(j => j.Finalized))
+        {
+            Assert.Equal(first[job.Id], job.PriceSnapshot);
+            decimal expected = job.Id == 1 ? 87.20m : 40.40m;
+            Assert.Equal(expected, job.FinalizedTotal);
+            Assert.Equal(expected, Total(reopened, job));
+        }
+
+        // The draft has no frozen prices, so it follows the new ones.
+        var draft = reopened.GetJobs().Single(j => j.Id == 3);
+        Assert.Null(draft.PriceSnapshot);
+        // 0.90 material + 3.00 machine + 0.15 power + 12 slicing
+        Assert.Equal(16.05m, Total(reopened, draft));
+
+        using var c = new SqliteConnection($"Data Source={_path};Pooling=False");
+        c.Open();
+        Assert.Equal(2L, Count(c, "SELECT COUNT(*) FROM jobs WHERE finalized = 1 AND price_snapshot IS NOT NULL"));
+    }
 }
