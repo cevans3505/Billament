@@ -1,6 +1,7 @@
 name: Release
 
-# Pushing a tag such as v3.5.0 builds PrintInvoicer-3.5.0.zip and attaches it to a DRAFT release for that tag.
+# Pushing a tag such as v3.5.0 builds PrintInvoicer-3.5.0.zip and its SHA-256 checksum file
+# (PrintInvoicer-3.5.0.zip.sha256) and attaches both to a DRAFT release for that tag.
 # Nothing is published automatically: review the draft on GitHub, write the notes and press Publish release.
 # The app's update check only sees published releases, so users are not told about a draft.
 
@@ -77,11 +78,21 @@ jobs:
           try { foreach ($entry in $archive.Entries) { Write-Output "$zip contains: $($entry.FullName) ($($entry.Length) bytes)" } }
           finally { $archive.Dispose() }
 
-      - name: Upload the zip for the release job
+      - name: Write the SHA-256 checksum file
+        run: |
+          $zip = "PrintInvoicer-${{ steps.version.outputs.version }}.zip"
+          $hash = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          # LF line ending on purpose, in the format sha256sum -c reads; Set-Content would write CRLF.
+          [IO.File]::WriteAllText("$zip.sha256", "$hash  $zip`n")
+          Write-Output "SHA-256 of ${zip}: $hash"
+
+      - name: Upload the zip and checksum for the release job
         uses: actions/upload-artifact@v7
         with:
           name: release-zip
-          path: PrintInvoicer-${{ steps.version.outputs.version }}.zip
+          path: |
+            PrintInvoicer-${{ steps.version.outputs.version }}.zip
+            PrintInvoicer-${{ steps.version.outputs.version }}.zip.sha256
           if-no-files-found: error
           retention-days: 7
 
@@ -109,7 +120,7 @@ jobs:
         with:
           name: release-zip
 
-      - name: Create the draft release with the zip attached
+      - name: Create the draft release with the zip and checksum attached
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
@@ -117,6 +128,8 @@ jobs:
         run: |
           $tag = $env:GITHUB_REF_NAME
           $zip = "PrintInvoicer-$env:VERSION.zip"
+          # The line is the hash, two spaces and the zip name; the notes show only the hash.
+          $sha = (Get-Content -LiteralPath "$zip.sha256" -TotalCount 1).Split(' ')[0]
           # Includes drafts, which this token can see.
           $existing = gh api "repos/$env:GH_REPO/releases" --paginate --jq '.[].tag_name'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -125,10 +138,12 @@ jobs:
               exit 1
           }
           $notes = @"
-          _Draft created by the Release workflow. Replace this text with the release notes, then publish._
+          _Draft created by the Release workflow. Replace this text with the release notes, keep the SHA-256 line below, then publish._
 
           Download $zip, unzip it and run PrintInvoicer.exe. See Read me.txt in the zip for first-time setup.
+
+          SHA-256: $sha
           "@
-          gh release create $tag $zip --draft --verify-tag --title "PrintInvoicer $env:VERSION" --notes $notes
+          gh release create $tag $zip "$zip.sha256" --draft --verify-tag --title "PrintInvoicer $env:VERSION" --notes $notes
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Write-Output "Draft release created for $tag. Review it on the Releases page and publish it when ready."

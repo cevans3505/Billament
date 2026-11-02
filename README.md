@@ -226,10 +226,13 @@ on the same PC as the last one.
 
 3. The **Release** workflow (`.github/workflows/release.yml`) checks the tag matches `<Version>` (and stops with an
    error if not), runs the unit tests, builds `PrintInvoicer.exe` with the same `dotnet publish` settings as
-   `publish.ps1`, zips it with `Read me.txt` into `PrintInvoicer-<version>.zip`, and creates a **draft** release for
-   the tag with the zip attached. Follow it on the repository's **Actions** tab.
-4. On the **Releases** page, open the draft, check the zip, replace the placeholder text with the release notes, and
-   press **Publish release**. Only then do installed copies see the update.
+   `publish.ps1`, zips it with `Read me.txt` into `PrintInvoicer-<version>.zip`, writes the zip's SHA-256 checksum to
+   `PrintInvoicer-<version>.zip.sha256`, and creates a **draft** release for the tag with both files attached and the
+   checksum in the draft notes. Follow it on the repository's **Actions** tab.
+4. On the **Releases** page, open the draft, check the zip and the `.sha256` file, and replace the placeholder text
+   with the release notes. Keep the `SHA-256:` line from the draft in the notes, so people can check their download
+   (see [Verify a download](#verify-a-download)). Then press **Publish release**. Only then do installed copies see
+   the update.
 
 If the tag was wrong, delete it (`git push origin --delete v3.5.0` and `git tag -d v3.5.0`), fix things, and tag again.
 If a draft for the tag already exists, delete the draft first; the workflow will not overwrite it.

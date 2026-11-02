@@ -19,7 +19,8 @@ Public, MIT, shared as-is. User docs: `README.md`. Security map: `AUDITING.md`.
 - Install locally: `.\publish.ps1` with the app closed (runs all tests first).
 - Release: bump `<Version>` in `src/PrintInvoicer.App/PrintInvoicer.App.csproj` (and the heading of
   `packaging/Read me.txt` on a major/minor bump), push to `main`, wait for CI, push tag `v<version>`; the Release
-  workflow makes a draft; check the zip, write notes, publish. Steps in README, "Making a release".
+  workflow makes a draft; check the zip and its `.sha256` file, write notes (keep the `SHA-256:` line), publish.
+  Steps in README, "Making a release".
 
 ## Rules
 
