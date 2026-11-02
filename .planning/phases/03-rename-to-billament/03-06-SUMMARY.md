@@ -9,7 +9,7 @@ requires:
     provides: plan 03-05 passed (Windows checks and the Sandbox upgrade test)
 affects: []
 
-status: task-2-done
+status: complete
 ---
 
 # 03-06 Summary: release
@@ -37,3 +37,17 @@ status: task-2-done
 - Step 5, PrintInvoicer 3.7.0 in Windows Sandbox with networking on, Settings > Check now (clicked through UI
   Automation): "You have the latest version (3.7.0). Checked Nov 2, 2:27 AM."
 - Rule from now on: never create a new repository named PrintInvoicer under cevans3505.
+
+## Task 3: release 4.0.0 (done, 2026-11-02)
+
+- `main` pushed at 6ef50ef; CI passed (Build and unit tests, Screen tests).
+- Tag `v4.0.0` pushed; the Release workflow passed the tag/version check with no read-me heading warning and made the
+  draft "Billament 4.0.0".
+- Draft checked: `Billament-4.0.0.zip` holds only `Billament.exe` and `Read me.txt` (first line `Billament 4.0`, has
+  "Coming from PrintInvoicer"); its SHA-256 `0d1ebf86feab9233f1a9d5b9f1b145cc36acb6644f8843af7c35fbd4a490c5b5` matches
+  the `.sha256` file and the notes.
+- Notes written (new name, data move, upgrade paragraph, SHA-256 line); the user published the release at 07:38 UTC.
+- API through the old name: `"tag_name":"v4.0.0"`.
+- PrintInvoicer 3.7.0 in Windows Sandbox, Settings > Check now: "PrintInvoicer 4.0.0 is available. You have 3.7.0."
+  with the Download button shown (not clicked; its target is the releases page, whose redirect step 4 checked).
+- Still to do: re-run `/gsd-secure-phase 03` for T-03-21 to T-03-29, then `/gsd-verify-work 03`.
