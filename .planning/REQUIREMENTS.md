@@ -29,7 +29,7 @@
 ### Concern Fixes (score order)
 
 - [ ] **FIX-01** (C11, 3.00): Each release publishes a SHA-256 checksum file, and the release steps tell people to state it in the release notes
-- [ ] **FIX-02** (C27, 2.50): A test opens a fixture database from before snapshots existed, with finalized jobs and no snapshot, and checks that each one gets a snapshot exactly once, with the expected totals
+- [x] **FIX-02** (C27, 2.50): A test opens a fixture database from before snapshots existed, with finalized jobs and no snapshot, and checks that each one gets a snapshot exactly once, with the expected totals
 - [ ] **FIX-03** (C06, 2.00): Explorer / Process.Start calls pass paths with `ArgumentList`, so a path containing a quote still works
 - [ ] **FIX-04** (C09, 2.00): A manual backup and the startup daily backup can't use the same temporary `.partial` file
 - [ ] **FIX-05** (C10, 2.00): The update-check response is read with a size cap, and a response over the cap is treated as "no update info"
@@ -80,7 +80,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SHOW-05 | Phase 1 | Complete |
 | TRIA-01 | Phase 2 | Complete |
 | FIX-01 | Phase 2 | Pending |
-| FIX-02 | Phase 2 | Pending |
+| FIX-02 | Phase 2 | Complete |
 | FIX-03 | Phase 2 | Pending |
 | FIX-04 | Phase 2 | Pending |
 | FIX-05 | Phase 2 | Pending |

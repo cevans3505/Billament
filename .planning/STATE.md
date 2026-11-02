@@ -1,18 +1,18 @@
 ---
 gsd_state_version: "1.0"
-current_phase: 2
+current_phase: 02
 current_phase_name: Quick-Win Concern Fixes
 status: executing
-stopped_at: Phase 01 complete, ready to plan Phase 2
-last_updated: "2026-11-02T01:02:56.040Z"
-last_activity: 2026-11-01
-last_activity_desc: Phase 01 complete, transitioned to Phase 2
-state_head: 4e210ed62b46e6f2bca0ad8af547403108962a29
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-11-02T01:25:10.292Z"
+last_activity: 2026-11-02
+last_activity_desc: Phase 02 execution started
+state_head: 06bbcaeb0c4ba995c4b932f9415b8aa50ddb4f11
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 6
-  completed_plans: 2
+  completed_plans: 3
   percent: 25
 ---
 
@@ -23,14 +23,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-01)
 
 **Core value:** Prices and invoices stay correct and trustworthy: a finalized invoice never changes, and totals match what the slice file and price book say.
-**Current focus:** Phase 01 — README Showcase
+**Current focus:** Phase 02 — Quick-Win Concern Fixes
 
 ## Current Position
 
-Phase: 2 (Quick-Win Concern Fixes) — READY TO EXECUTE
-Plan: Not started
+Phase: 02 (Quick-Win Concern Fixes) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-11-01 — Phase 01 complete, transitioned to Phase 2
+Last activity: 2026-11-02 — Phase 02 execution started
 
 Progress: [███░░░░░░░] 25%
 
@@ -52,6 +52,11 @@ Progress: [███░░░░░░░] 25%
 - Trend: -
 
 *Updated after each plan completion*
+**Per-Plan Metrics:**
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 02 P01 | 6min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -64,6 +69,7 @@ Recent decisions affecting current work:
 - [Roadmap]: TRIA-01 is already done (CONCERNS-TRIAGE.md committed) and is mapped to Phase 2 as Complete
 - [Roadmap]: FIX-01 to FIX-12 stay in triage score order across Phases 2 and 3
 - [Roadmap]: FIX-08 (freeze once) sits after FIX-02 (legacy-database test) so the test guards the change
+- [Phase 02]: 02-01: legacy freeze runs under pricing rules v2; fixture values give same cents under v1; Phase 3 FIX-08 must keep frozen totals
 
 ### Pending Todos
 
@@ -86,6 +92,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-01T22:02:45.482Z
-Stopped at: Phase 01 complete, ready to plan Phase 2
-Resume file: .planning/phases/01-readme-showcase/01-CONTEXT.md
+Last session: 2026-11-02T01:25:10.221Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: None
