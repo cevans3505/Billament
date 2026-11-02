@@ -27,7 +27,9 @@ code that does any of these things **without** an `AUDIT:` tag, that's a gap in 
 
 That is the only network request in the program. It sends no information about the user or their data; only the
 standard request headers (a `User-Agent` of `PrintInvoicer/1`). From the reply it reads only the release's tag and page
-address. There is no telemetry, analytics or crash upload. Error details are saved locally and never sent (see below).
+address. It reads at most 256 KB of the reply (`LatestReleaseReply.MaxBytes`); a longer reply is ignored and treated as
+no update information. There is no telemetry, analytics or crash upload. Error details are saved locally and never sent
+(see below).
 
 ## Programs started
 
