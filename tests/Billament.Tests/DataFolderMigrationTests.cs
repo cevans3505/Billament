@@ -650,4 +650,48 @@ public sealed class DataFolderMigrationTests : IDisposable
         Assert.Equal(Path.Combine(Folders.NewDocuments, "My backups"), settings.BackupFolder);
         Assert.Equal(Path.Combine(Folders.NewDocuments, "Invoices 2026"), settings.InvoiceFolder);
     }
+
+    // ---------------- Restoring a backup from before the rename ----------------
+
+    [Fact]
+    public void A_restored_backup_from_before_the_rename_gets_its_folders_updated()
+    {
+        CreateOldData();
+        SetSettings(OldDb,
+            (nameof(AppSettings.BackupFolder), Path.Combine(Folders.OldDocuments, "My backups")),
+            (nameof(AppSettings.InvoiceFolder), Path.Combine(Folders.OldDocuments, "Invoices 2026")));
+        var frozen = Frozen(OldDb);
+
+        // A backup made by 3.7.0, picked from a folder outside the data folder.
+        string picked = Path.Combine(_root, "picked");
+        string made = DatabaseBackup.Manual(OldDb, picked, new DateTime(2026, 10, 20, 9, 0, 0));
+        string backup = Path.Combine(picked, $"{DataFolders.OldName.ToLowerInvariant()}-2026-10-20.db");
+        File.Move(made, backup);
+
+        // The live 4.0 database is replaced by it, as the Restore a backup button does.
+        var live = new Database(NewDb);
+        DatabaseBackup.Restore(backup, NewDb, Path.Combine(Folders.NewDocuments, "Backups"), Now);
+        Assert.Equal(Path.Combine(Folders.OldDocuments, "My backups"), new Database(NewDb).LoadSettings().BackupFolder);
+
+        Assert.True(DataFolderMigration.UpdateFolderSettings(NewDb, Folders, StringComparison.Ordinal));
+
+        var settings = new Database(NewDb).LoadSettings();
+        Assert.Equal(Path.Combine(Folders.NewDocuments, "My backups"), settings.BackupFolder);
+        Assert.Equal(Path.Combine(Folders.NewDocuments, "Invoices 2026"), settings.InvoiceFolder);
+        Assert.Equal(frozen, Frozen(NewDb));
+    }
+
+    [Fact]
+    public void Updating_folder_settings_changes_nothing_when_no_folder_is_inside_the_old_one()
+    {
+        CreateOldData();
+        SetSettings(OldDb,
+            (nameof(AppSettings.BackupFolder), Path.Combine(_root, "elsewhere", "Backups")),
+            (nameof(AppSettings.InvoiceFolder), Path.Combine(Docs, DataFolders.OldName + "Old", "x")));
+        var bytes = File.ReadAllBytes(OldDb);
+
+        Assert.False(DataFolderMigration.UpdateFolderSettings(OldDb, Folders, StringComparison.Ordinal));
+
+        Assert.Equal(bytes, File.ReadAllBytes(OldDb));   // never opened for writing
+    }
 }

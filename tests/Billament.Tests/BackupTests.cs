@@ -183,4 +183,45 @@ public sealed class BackupTests : IDisposable
         Assert.True(ex is IOException or UnauthorizedAccessException, ex.ToString());
         Assert.Empty(Directory.GetFiles(Folder, "*.partial"));
     }
+
+    // ---------------- Backups made before the rename ----------------
+
+    [Fact]
+    public void Backups_made_before_the_rename_are_listed_and_restored()
+    {
+        var db = DbWithJob("Caps");
+        // A copy made by 3.7.0 has the old prefix; the content is the same kind of database.
+        string made = DatabaseBackup.Manual(DbPath, Folder, new DateTime(2026, 10, 20, 9, 0, 0));
+        string legacy = Path.Combine(Folder, "printinvoicer-2026-10-20.db");
+        File.Move(made, legacy);
+
+        Assert.Equal(["printinvoicer-2026-10-20.db"], DatabaseBackup.List(Folder).Select(f => f.Name));
+
+        var job = db.GetJobs().Single();
+        job.Title = "After a mistake";
+        db.SaveJob(job);
+
+        string safety = DatabaseBackup.Restore(legacy, DbPath, Folder, new DateTime(2026, 10, 30, 10, 0, 0));
+
+        Assert.Equal("Caps", new Database(DbPath).GetJobs().Single().Title);
+        Assert.StartsWith("billament-", Path.GetFileName(safety));
+        Assert.EndsWith("-before-restore.db", safety);
+    }
+
+    [Fact]
+    public void Only_backup_names_are_listed()
+    {
+        Directory.CreateDirectory(Folder);
+        foreach (string name in new[]
+                 {
+                     "notes.db", "billament.db", "printinvoicer.db", "billament-2026-10-30.db",
+                     "printinvoicer-2026-10-29-120000-manual.db", "billament-2026-10-30.db.0123456789abcdef.partial",
+                 })
+            File.WriteAllBytes(Path.Combine(Folder, name), [1, 2, 3]);
+        Directory.CreateDirectory(Path.Combine(Folder, "printinvoicer-2026-10-29.db"));   // a folder, not a backup
+
+        var names = DatabaseBackup.List(Folder).Select(f => f.Name).Order(StringComparer.Ordinal).ToList();
+
+        Assert.Equal(["billament-2026-10-30.db", "printinvoicer-2026-10-29-120000-manual.db"], names);
+    }
 }

@@ -224,6 +224,9 @@ public static class DataFolderMigration
         return new DataMoveResult(documents.Value, local.Value, backup, null, notice, error);
     }
 
+    /// <summary>Placeholder for the failing tests; replaced by the real rewrite in the next commit.</summary>
+    public static bool UpdateFolderSettings(string databasePath, DataFolders folders, StringComparison? pathComparison = null) => false;
+
     /// <summary>
     /// The same place under the new data folder when <paramref name="value"/> is the old data folder or a folder inside
     /// it; otherwise <paramref name="value"/> unchanged. Treats the setting as untrusted text and never touches the disk.
