@@ -79,6 +79,22 @@ Building needs the .NET 10 SDK (`winget install Microsoft.DotNet.SDK.10`).
 To set it up on someone else's PC, send them the [latest release](https://github.com/cevans3505/PrintInvoicer/releases/latest).
 The zip holds `PrintInvoicer.exe`, which runs from anywhere and keeps its own data in their `Documents\PrintInvoicer`.
 
+### Verify a download
+
+Each release lists the SHA-256 checksum of its zip in the release notes, and in a `PrintInvoicer-<version>.zip.sha256`
+file attached next to the zip. To check a download, open PowerShell in the folder that holds the zip and run:
+
+```powershell
+Get-FileHash .\PrintInvoicer-<version>.zip -Algorithm SHA256
+```
+
+Compare the `Hash` it prints with the release notes (case does not matter). On Linux or macOS,
+`sha256sum -c PrintInvoicer-<version>.zip.sha256` does the same check.
+
+A matching checksum shows the zip downloaded completely and is the file the release notes describe. It does not prove
+who built it: the checksum is published in the same place as the zip, and releases are not code-signed. To be sure a
+download matches this source, build it yourself from the tag (see [AUDITING.md](AUDITING.md#building-and-releasing)).
+
 ### Updates
 
 When the app starts it asks GitHub, at most once a day, whether a newer release exists, and shows a bar at the top of

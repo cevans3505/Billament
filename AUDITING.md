@@ -117,11 +117,15 @@ These run on a developer's PC or on GitHub, never on users' machines:
   The script's program start and file read are tagged `# AUDIT:`. The `// AUDIT:` tags under `tests` are in
   `WpfHost.cs` (screenshots) and `ReadmeImageTests.cs` (README pictures), outside the `src` count above.
 - **`.github/workflows/ci.yml`** builds and tests every change on a GitHub Windows machine, with a read-only token.
-- **`.github/workflows/release.yml`**, on a version tag, builds the program the same way and attaches the zip to a
-  **draft** release. Only that last step has write access, and a person publishes the release by hand.
+- **`.github/workflows/release.yml`**, on a version tag, builds the program the same way, writes the zip's SHA-256
+  checksum to `PrintInvoicer-<version>.zip.sha256`, and attaches the zip and that file to a **draft** release whose
+  notes include the checksum. Only that last step has write access, and a person publishes the release by hand.
 
-Releases are not code-signed. To be sure a download matches this source, build it yourself from the tag with
-`publish.ps1` or the `dotnet publish` command in the release workflow.
+Releases are not code-signed. Each release gives the zip's SHA-256 checksum in its notes and in its `.sha256` file;
+`Get-FileHash .\PrintInvoicer-<version>.zip -Algorithm SHA256` shows whether a download is complete and unchanged from
+what the release describes. It does not prove who built it, because the checksum is published in the same place as the
+zip. To be sure a download matches this source, build it yourself from the tag with `publish.ps1` or the
+`dotnet publish` command in the release workflow.
 
 ## A suggested order for a review
 
