@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: README Showcase** - Generated offscreen images of the job list, job editor and invoice page 1 in the README (completed 2026-11-01)
 - [x] **Phase 2: Quick-Win Concern Fixes** - Concerns scored 2.0 and above fixed in score order (checksums, legacy database test, safer paths, names and reads) (completed 2026-11-01)
-- [ ] **Phase 3: Rename to Billament** - The project, app, data folders and repository become Billament, with a one-time safe move of existing data; ships as 4.0.0
+- [x] **Phase 3: Rename to Billament** - The project, app, data folders and repository become Billament, with a one-time safe move of existing data; ships as 4.0.0 (completed 2026-11-02)
 - [ ] **Phase 4: Data Safety Fixes** - Concerns scored 1.5 fixed in score order (freeze once, safe restore, ZIP cap, single instance, integrity check)
 - [ ] **Phase 5: Slice File Submissions** - GitHub issue forms for slice files, linked from the README and an app menu item, with privacy warnings
 
@@ -74,7 +74,7 @@ Plans:
   3. If the new folders already exist the old ones are never touched, and any failure during the move shows a plain message and leaves the old data where it was; the move logic is in Core with tests that run on Linux, and every new file or folder access has an `// AUDIT:` comment and an AUDITING.md row
   4. The update check, its allow-check, the issue page, README and docs point at `cevans3505/Billament`, and a 3.7.0 install still finds 4.0.0 through GitHub's redirect after the repository is renamed
   5. `publish.ps1`, `make-readme-images.ps1`, `tools/Make-Icon.ps1`, `ci.yml` and `release.yml` use the new name (install folder, Start menu shortcut with the old ones removed, `Billament-<version>.zip`, the "Billament 4.0" read-me heading check), and a case-insensitive search for "PrintInvoicer" finds only deliberate hits (migration old-folder names, history, changelog)
-**Plans**: 4/6 plans executed
+**Plans**: 6/6 plans complete
 Plans:
 **Wave 1**
 - [x] 03-01-PLAN.md - Tracer: git mv the solution, projects and icon, one scripted replacement over code, build Billament.sln and pass the unit tests; then scripts, workflows and docs, version 4.0.0 and the "Billament 4.0" read-me heading (NAME-01, NAME-02, NAME-05, NAME-06, NAME-07, NAME-08) [cloud]
@@ -89,10 +89,10 @@ Plans:
 - [x] 03-04-PLAN.md - Upgrade notes in README, Read me.txt and release notes; redirect remark on UpdateService.Repository; publish.ps1 removes the old shortcut and install folder; final case-insensitive search against an allowlist (NAME-05, NAME-06, NAME-07, NAME-08) [cloud]
 
 **Wave 5** *(blocked on Wave 4 completion)*
-- [ ] 03-05-PLAN.md - Windows checks: full test suite with offscreen screen tests, make-readme-images.ps1, publish.ps1, and a real upgrade test on a copy of 3.7.0 data (3.7.0 still running, custom folders, old backups, run-once) (NAME-01, NAME-02, NAME-03, NAME-04, NAME-06, NAME-07) [windows]
+- [x] 03-05-PLAN.md - Windows checks: full test suite with offscreen screen tests, make-readme-images.ps1, publish.ps1, and a real upgrade test on a copy of 3.7.0 data (3.7.0 still running, custom folders, old backups, run-once) (NAME-01, NAME-02, NAME-03, NAME-04, NAME-06, NAME-07) [windows]
 
 **Wave 6** *(blocked on Wave 5 completion)*
-- [ ] 03-06-PLAN.md - Manual end-of-phase checklist: final search again, rename the repository on GitHub, curl checks on the old API and web addresses (stops for your decision if they fail), then the 4.0.0 release and Check now in 3.7.0 (NAME-05, NAME-08) [windows, manual]
+- [x] 03-06-PLAN.md - Manual end-of-phase checklist: final search again, rename the repository on GitHub, curl checks on the old API and web addresses (stops for your decision if they fail), then the 4.0.0 release and Check now in 3.7.0 (NAME-05, NAME-08) [windows, manual]
 **UI hint**: yes
 
 ### Phase 4: Data Safety Fixes
@@ -132,6 +132,6 @@ Phases execute in numeric order: 1, 2, 3, 4, 5
 |-------|----------------|--------|-----------|
 | 1. README Showcase | 2/2 | Complete    | 2026-11-01 |
 | 2. Quick-Win Concern Fixes | 4/4 | Complete    | 2026-11-01 |
-| 3. Rename to Billament | 4/6 | In Progress | - |
+| 3. Rename to Billament | 6/6 | Complete    | 2026-11-02 |
 | 4. Data Safety Fixes | 0/TBD | Not started | - |
 | 5. Slice File Submissions | 0/TBD | Not started | - |

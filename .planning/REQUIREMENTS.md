@@ -15,14 +15,14 @@
 
 ### Rename to Billament
 
-- [ ] **NAME-01**: The code base is named Billament: `Billament.sln`, project files, folders and namespaces `Billament.Core`, `Billament.App`, `Billament.Tests` and `Billament.UiTests`, `InternalsVisibleTo("Billament.UiTests")`, assembly and exe `Billament.exe`, and the icon file
-- [ ] **NAME-02**: Everything the user sees says Billament: window titles, dialogs, the update bar, the error report, PDF text, PDF file names and metadata, and temporary folder names
-- [ ] **NAME-03**: On first start, if only the old folders exist (`Documents\PrintInvoicer`, `%LOCALAPPDATA%\PrintInvoicer`), the app makes a backup and then moves them once to `Documents\Billament` (database renamed to `billament.db`) and `%LOCALAPPDATA%\Billament`; the old folders are never touched when the new ones exist; a failure shows a plain message and leaves the old data in place; finalized invoice totals are unchanged; the logic is in Core with tests that run on Linux; every new file or folder access has an `// AUDIT:` comment and an AUDITING.md row
-- [ ] **NAME-04**: A custom backup or invoice folder setting that points inside the old data folder still finds its files after the move, and daily backups made under the old name can still be listed, restored and pruned
-- [ ] **NAME-05**: The update check (`UpdateService.Repository`), its allow-check, the error report's issue page, README and docs links point at `cevans3505/Billament`, and a 3.7.0 install still finds the 4.0.0 release through GitHub's redirect after the repository is renamed
-- [ ] **NAME-06**: Build, install and release scripts use the new name: `publish.ps1` (install folder, Start menu shortcut, removing the old PrintInvoicer shortcut and install folder), `make-readme-images.ps1`, `tools/Make-Icon.ps1`, `ci.yml` and `release.yml` (`Billament-<version>.zip`, checksum file, read-me heading check, release title)
-- [ ] **NAME-07**: Docs use the new name: README (with the README pictures regenerated where they show the name), AUDITING.md, CLAUDE.md, `.claude/CLAUDE.md`, `packaging/Read me.txt` (heading "Billament 4.0" and a note about the data move), and `.planning/codebase` where the old name would mislead; historical `.planning` phase files are left alone
-- [ ] **NAME-08**: The app ships as version 4.0.0, and a case-insensitive search for "PrintInvoicer" in the repository finds only deliberate hits (the migration's old folder and file names, history, the changelog)
+- [x] **NAME-01**: The code base is named Billament: `Billament.sln`, project files, folders and namespaces `Billament.Core`, `Billament.App`, `Billament.Tests` and `Billament.UiTests`, `InternalsVisibleTo("Billament.UiTests")`, assembly and exe `Billament.exe`, and the icon file
+- [x] **NAME-02**: Everything the user sees says Billament: window titles, dialogs, the update bar, the error report, PDF text, PDF file names and metadata, and temporary folder names
+- [x] **NAME-03**: On first start, if only the old folders exist (`Documents\PrintInvoicer`, `%LOCALAPPDATA%\PrintInvoicer`), the app makes a backup and then moves them once to `Documents\Billament` (database renamed to `billament.db`) and `%LOCALAPPDATA%\Billament`; the old folders are never touched when the new ones exist; a failure shows a plain message and leaves the old data in place; finalized invoice totals are unchanged; the logic is in Core with tests that run on Linux; every new file or folder access has an `// AUDIT:` comment and an AUDITING.md row
+- [x] **NAME-04**: A custom backup or invoice folder setting that points inside the old data folder still finds its files after the move, and daily backups made under the old name can still be listed, restored and pruned
+- [x] **NAME-05**: The update check (`UpdateService.Repository`), its allow-check, the error report's issue page, README and docs links point at `cevans3505/Billament`, and a 3.7.0 install still finds the 4.0.0 release through GitHub's redirect after the repository is renamed
+- [x] **NAME-06**: Build, install and release scripts use the new name: `publish.ps1` (install folder, Start menu shortcut, removing the old PrintInvoicer shortcut and install folder), `make-readme-images.ps1`, `tools/Make-Icon.ps1`, `ci.yml` and `release.yml` (`Billament-<version>.zip`, checksum file, read-me heading check, release title)
+- [x] **NAME-07**: Docs use the new name: README (with the README pictures regenerated where they show the name), AUDITING.md, CLAUDE.md, `.claude/CLAUDE.md`, `packaging/Read me.txt` (heading "Billament 4.0" and a note about the data move), and `.planning/codebase` where the old name would mislead; historical `.planning` phase files are left alone
+- [x] **NAME-08**: The app ships as version 4.0.0, and a case-insensitive search for "PrintInvoicer" in the repository finds only deliberate hits (the migration's old folder and file names, history, the changelog)
 
 ### Slice File Submissions
 
@@ -97,14 +97,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FIX-05 | Phase 2 | Complete |
 | FIX-06 | Phase 2 | Complete |
 | FIX-07 | Phase 2 | Complete |
-| NAME-01 | Phase 3 | Pending |
-| NAME-02 | Phase 3 | Pending |
-| NAME-03 | Phase 3 | Pending |
-| NAME-04 | Phase 3 | Pending |
-| NAME-05 | Phase 3 | Pending |
-| NAME-06 | Phase 3 | Pending |
-| NAME-07 | Phase 3 | Pending |
-| NAME-08 | Phase 3 | Pending |
+| NAME-01 | Phase 3 | Complete |
+| NAME-02 | Phase 3 | Complete |
+| NAME-03 | Phase 3 | Complete |
+| NAME-04 | Phase 3 | Complete |
+| NAME-05 | Phase 3 | Complete |
+| NAME-06 | Phase 3 | Complete |
+| NAME-07 | Phase 3 | Complete |
+| NAME-08 | Phase 3 | Complete |
 | FIX-08 | Phase 4 | Pending |
 | FIX-09 | Phase 4 | Pending |
 | FIX-10 | Phase 4 | Pending |
