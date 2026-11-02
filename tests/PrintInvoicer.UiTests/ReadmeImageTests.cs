@@ -71,9 +71,6 @@ public sealed class ReadmeImageTests : IDisposable
         byte[] png;
         try
         {
-            main.Width = 1100;
-            main.Height = 680;
-            WpfHost.Settle(main);
 
             // The picture must show every state in a fixed order, or it is not worth committing.
             var rows = main.ViewModel.Jobs;
@@ -86,7 +83,7 @@ public sealed class ReadmeImageTests : IDisposable
             string[] expectedStatuses = ["Draft", "Draft", "Invoiced Oct 30", "Paid Oct 27"];
             Assert.Equal(expectedStatuses, rows.Select(r => r.Status));
 
-            png = WpfHost.RenderPng(main, 2);
+            png = WpfHost.RenderPng(main, 1100, 680, 2);
         }
         finally
         {
@@ -112,13 +109,10 @@ public sealed class ReadmeImageTests : IDisposable
         string total;
         try
         {
-            window.Width = 1320;
-            window.Height = 820;
-            WpfHost.Settle(window);
             Assert.True(vm.IsEditable);
             Assert.Equal(5, vm.Parts[0].Plates[0].Slots.Count);
 
-            png = WpfHost.RenderPng(window, 2);
+            png = WpfHost.RenderPng(window, 1320, 820, 2);
             total = vm.TotalText;
         }
         finally

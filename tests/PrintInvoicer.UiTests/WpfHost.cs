@@ -106,7 +106,31 @@ internal static class WpfHost
     public static byte[] RenderPng(Window window, double scale = 1)
     {
         Settle(window);
+        return Encode((FrameworkElement)VisualTreeHelper.GetChild(window, 0), scale);
+    }
+
+    /// <summary>
+    /// Like <see cref="RenderPng(Window, double)"/>, for the window at width x height even on a smaller screen. Windows
+    /// shrinks a window to fit the screen (GitHub's runners have a small one), so the client area is laid out at the full
+    /// size just before it is drawn; the window's next layout pass puts it back. On a small screen a DataGrid keeps the
+    /// column widths it got at the smaller size, so that picture can differ slightly; the README pictures are made on a
+    /// full-size screen by make-readme-images.ps1.
+    /// </summary>
+    public static byte[] RenderPng(Window window, double width, double height, double scale)
+    {
+        window.Width = width;
+        window.Height = height;
+        Settle(window);
         var root = (FrameworkElement)VisualTreeHelper.GetChild(window, 0);
+        var client = new Size(width - (window.ActualWidth - root.ActualWidth), height - (window.ActualHeight - root.ActualHeight));
+        root.Measure(client);
+        root.Arrange(new Rect(client));
+        return Encode(root, scale);
+    }
+
+    // Draws an element at its laid-out size and encodes it as PNG.
+    private static byte[] Encode(FrameworkElement root, double scale)
+    {
         int width = Math.Max(1, (int)(root.ActualWidth * scale));
         int height = Math.Max(1, (int)(root.ActualHeight * scale));
         var rtb = new RenderTargetBitmap(width, height, 96 * scale, 96 * scale, PixelFormats.Pbgra32);
