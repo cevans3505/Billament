@@ -11,7 +11,7 @@ provides:
   - InvoicePdf.Write names all three PDF kinds through SafeFileName and refuses a path outside its folder
   - ShellCommands (Core): ShowFolder and ShowFile build Explorer requests with ArgumentList
   - Settings Open buttons and the error report start Explorer through ShellCommands
-affects: [phase 2 close-out (Windows Explorer check A2 is still PENDING)]
+affects: [phase 2 close-out (Windows Explorer check A2 passed on 2026-11-02)]
 status: complete
 requirements-completed: [FIX-06, FIX-03]
 actuals:
@@ -84,7 +84,7 @@ coverage:
     verification:
       - kind: manual_procedural
         ref: "Windows Explorer check (A2) below"
-        status: unknown
+        status: pass
     human_judgment: true
 duration: 15min
 completed: 2026-11-02
@@ -141,9 +141,9 @@ FIX-06 says "file and folder names". `InvoicePdf.Write` picks its folder in one 
 
 ## Windows Explorer check (A2)
 
-PENDING
+File highlighted: two-argument form kept.
 
-Not run: Explorer and `Process.Start` with `UseShellExecute` only run on Windows. Phase 2 must not be marked done while this reads PENDING (unless the result is recorded in 02-UAT.md). The cloud implementation uses the two-argument form (`/select,` then the path, as separate `ArgumentList` entries). Whoever runs the check replaces PENDING with "file highlighted: two-argument form kept" or "not highlighted: fallback applied" plus the commit.
+Checked on Windows 11 on 2026-11-02 by starting the same `ProcessStartInfo` that `ShellCommands` builds. `/select,` and `C:\Program Files\Windows Defender\MpCmdRun.exe` as separate `ArgumentList` entries opened Windows Defender with `MpCmdRun.exe` highlighted. `ShowFolder` with `C:\Program Files\Common Files` opened that folder. No fallback was applied. Details are in 02-UAT.md, test 4.
 
 ## Deviations from Plan
 
