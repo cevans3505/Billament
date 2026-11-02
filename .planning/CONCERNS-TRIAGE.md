@@ -17,6 +17,7 @@
 
 Costs are estimates from reading the map, not the code. Planning for each phase should check the code first and
 re-score anything that turns out to be already handled.
+The Phase 2 items were checked this way; see Re-score after checking the code (Phase 2).
 
 ## Scores
 
@@ -51,6 +52,26 @@ re-score anything that turns out to be already handled.
 | C17 | Pricing rules and frozen snapshots are fragile | n/a | n/a | n/a | Merged | The missing test is covered by C27. The rest is a rule already in CLAUDE.md. |
 | C28 | Schema upgrade across versions not tested | n/a | n/a | n/a | Merged | Part of C04. |
 | C29 | Local SQLite only, no multi-PC sharing | 1 | 5 | 0.20 | Left alone | Not planned. The single-instance part is C20. |
+
+## Re-score after checking the code (Phase 2)
+
+Checked against the code on 2026-11-02 while planning Phase 2. None of the seven items was fully handled already; two
+were partly handled, so their notes say what is left.
+
+| ID | Still open? | What the code showed | Score now | Decision |
+|----|-------------|----------------------|-----------|----------|
+| C11 | Yes | `release.yml` zips and attaches only the zip; there is no checksum anywhere. | 3.00 (unchanged) | Fix in Phase 2 (plan 02-02). |
+| C27 | Partly | `Older_finalized_invoices_are_frozen_on_upgrade` (PriceSnapshotTests) covers one job on a current-schema database; still missing were a database without the snapshot columns, several jobs, a draft, literal totals and an exactly-once check. | 2.50 (unchanged; cost stays 2) | Fixed by `LegacyDatabaseTests` (plan 02-01). |
+| C06 | Yes | Two sites: `SettingsViewModel.OpenFolder` and the Explorer line in `ErrorReport.Show` build an argument string by hand. The five other `Process.Start` calls pass the path or address as the program to open, so they already handle a quote. | 2.00 (unchanged) | Fix in Phase 2 (plan 02-04). |
+| C09 | Partly | The daily name (`printinvoicer-YYYY-MM-DD.db`) and the manual name (`printinvoicer-YYYY-MM-DD-HHmmss-label.db`) can never be equal, so the startup and manual backups already never share a `.partial`. Left: two manual backups in the same second with the same label share one, and the copy deletes any existing `.partial` first, with no AUDIT tag. | 2.00 (benefit 2, cost 1: the remaining fix is the same small change) | Fix the remaining gap in Phase 2 (plan 02-03). |
+| C10 | Yes | The update check reads GitHub's whole reply with no limit. | 2.00 (unchanged) | Fix in Phase 2 (plan 02-03). |
+| C14 | Yes | Wider than described: only the job title is cleaned, with the operating system's list of bad characters (on Linux only two characters); the invoice number, which the user can type, is not cleaned at all, and there is no length limit. | 2.00 (unchanged) | Fix in Phase 2 (plan 02-04). |
+| C22 | Yes | The README says nothing about QuestPDF's license (the concern text says it lists "Community license"; it does not), and AUDITING.md names the license without its condition. | 2.00 (unchanged) | Fix in Phase 2 (plan 02-02). |
+
+**Note for C01 (Phase 3, FIX-08):** the one-time freeze gives an invoice finalized before snapshots existed today's
+prices under the current pricing rules (version 2), even if it was first sent under version 1 rules (up to 3.4). The
+Phase 2 legacy-database test uses values where both versions give the same cents, so it does not pin that behavior.
+FIX-08 must keep the frozen totals of invoices already frozen.
 
 ## Summary
 
