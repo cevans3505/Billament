@@ -1,4 +1,5 @@
 using System.IO;
+using PrintInvoicer.Core.Files;
 using PrintInvoicer.Core.Models;
 using PrintInvoicer.Core.Pricing;
 using QuestPDF.Fluent;
@@ -44,9 +45,9 @@ public static class InvoicePdf
         string number = job.InvoiceNumber ?? $"draft {job.CreatedDate:yyyy-MM-dd}";
         string name = kind switch
         {
-            InvoiceKind.Preview => $"Preview {number} {Safe(job.Title)}.pdf",
-            InvoiceKind.Internal => $"Invoice {number} {Safe(job.Title)} (detail).pdf",
-            _ => $"Invoice {number} {Safe(job.Title)}.pdf",
+            InvoiceKind.Preview => SafeFileName.Compose("Preview", number, job.Title, ".pdf"),
+            InvoiceKind.Internal => SafeFileName.Compose("Invoice", number, job.Title, " (detail).pdf"),
+            _ => SafeFileName.Compose("Invoice", number, job.Title, ".pdf"),
         };
         string path = Path.Combine(folder, name);
 
@@ -642,11 +643,4 @@ public static class InvoicePdf
         c.BorderBottom(0.5f).BorderColor(Rule).PaddingVertical(2).Text(text).FontSize(9);
 
     private static string PrettyName(string name) => name.Replace('_', ' ').Trim();
-
-    // A job title made safe to use in a file name.
-    private static string Safe(string s)
-    {
-        var invalid = Path.GetInvalidFileNameChars();
-        return new string(s.Select(ch => invalid.Contains(ch) ? '-' : ch).ToArray()).Trim();
-    }
 }

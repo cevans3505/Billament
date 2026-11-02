@@ -1,0 +1,146 @@
+using PrintInvoicer.Core.Files;
+
+namespace PrintInvoicer.Tests;
+
+/// <summary>
+/// Invoice file names come from what the user typed; they must always be safe, short enough, and the same as before
+/// for normal names.
+/// </summary>
+public sealed class SafeFileNameTests
+{
+    // Reserved device names as this test knows them, kept apart from SafeFileName's own list.
+    private static readonly string[] TestReserved =
+    [
+        "CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$",
+        "COM0", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+        "LPT0", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+        "COM\u00B9", "COM\u00B2", "COM\u00B3", "LPT\u00B9", "LPT\u00B2", "LPT\u00B3",
+    ];
+
+    /// <summary>Checks a name against Windows' rules independently of SafeFileName's own code.</summary>
+    private static void AssertSafe(string name, int maxLength)
+    {
+        Assert.False(string.IsNullOrEmpty(name));
+        Assert.True(name.Length <= maxLength, $"'{name}' is {name.Length} chars, limit {maxLength}");
+        foreach (char c in "<>:\"/\\|?*")
+        {
+            Assert.DoesNotContain(c, name);
+        }
+        Assert.DoesNotContain(name, char.IsControl);
+        for (int i = 0; i < name.Length; i++)
+        {
+            if (char.IsHighSurrogate(name[i]))
+            {
+                Assert.True(i + 1 < name.Length && char.IsLowSurrogate(name[i + 1]), "unpaired high surrogate");
+                i++;
+            }
+            else
+            {
+                Assert.False(char.IsLowSurrogate(name[i]), "unpaired low surrogate");
+            }
+        }
+        Assert.False(name.StartsWith(' ') || name.StartsWith('.'), $"'{name}' starts with a space or dot");
+        Assert.False(name.EndsWith(' ') || name.EndsWith('.'), $"'{name}' ends with a space or dot");
+        Assert.NotEqual(".", name);
+        Assert.NotEqual("..", name);
+        int dot = name.IndexOf('.');
+        string stem = (dot < 0 ? name : name[..dot]).Trim();
+        Assert.DoesNotContain(TestReserved, r => string.Equals(r, stem, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// The text the app made from a title before this phase, in the Windows build: Windows' forbidden characters and
+    /// U+0000 to U+001F became a dash, then whitespace was trimmed from both ends. Written out by hand so the test
+    /// gives the Windows answer on Linux too.
+    /// </summary>
+    private static string OldWindowsName(string title)
+    {
+        const string forbidden = "\"<>|:*?\\/";
+        var chars = title.Select(c => forbidden.Contains(c) || c < ' ' ? '-' : c).ToArray();
+        return new string(chars).Trim();
+    }
+
+    [Theory]
+    [InlineData("..")]
+    [InlineData(@"..\..\evil")]
+    [InlineData(@"C:\x")]
+    [InlineData("report:2026")]
+    [InlineData("CON")]
+    [InlineData("con")]
+    [InlineData("CON.txt")]
+    public void Requirement_cases_come_out_safe(string input)
+    {
+        AssertSafe(SafeFileName.Clean(input, 60), 60);
+    }
+
+    [Theory]
+    [InlineData("report:2026", "report-2026")]
+    [InlineData(@"C:\x", "C--x")]
+    [InlineData("a/b", "a-b")]
+    [InlineData(@"..\..\evil", "-.-evil")]
+    [InlineData("con", "_con")]
+    [InlineData("CON.txt", "_CON.txt")]
+    [InlineData("Tube caps.", "Tube caps")]
+    public void Known_names_are_cleaned_as_expected(string input, string expected)
+    {
+        Assert.Equal(expected, SafeFileName.Clean(input, 60));
+    }
+
+    [Theory]
+    [InlineData("Invoice", "2026-001", "Wire Brush Inserts", ".pdf", "Invoice 2026-001 Wire Brush Inserts.pdf")]
+    [InlineData("Invoice", "2026-001", "Wire Brush Inserts", " (detail).pdf", "Invoice 2026-001 Wire Brush Inserts (detail).pdf")]
+    [InlineData("Preview", "draft 2026-10-31", "Tube caps", ".pdf", "Preview draft 2026-10-31 Tube caps.pdf")]
+    public void Normal_invoice_names_are_unchanged(string prefix, string number, string title, string suffix, string expected)
+    {
+        Assert.Equal(expected, SafeFileName.Compose(prefix, number, title, suffix));
+    }
+
+    [Theory]
+    [InlineData(@"x\..\..\y", @"..\evil:CON")]
+    [InlineData("../../etc/y", "..")]
+    public void Hostile_invoice_number_and_title_stay_safe(string number, string title)
+    {
+        string result = SafeFileName.Compose("Invoice", number, title, ".pdf");
+
+        Assert.DoesNotContain('/', result);
+        Assert.DoesNotContain('\\', result);
+        Assert.EndsWith(".pdf", result);
+        Assert.Equal(result, Path.GetFileName(result));
+    }
+
+    [Theory]
+    [InlineData("Tube caps")]
+    [InlineData("  Tube caps  ")]
+    [InlineData("v1.2 bracket")]
+    [InlineData("Aux cable clips")]
+    [InlineData("Tube caps?")]
+    [InlineData("Fin\tclips")]
+    public void Titles_inside_the_boundary_keep_their_old_name(string title)
+    {
+        Assert.Equal(OldWindowsName(title), SafeFileName.Clean(title, SafeFileName.MaxTitleLength));
+    }
+
+    [Theory]
+    [InlineData("Tube caps.", "Tube caps")]
+    [InlineData("", "untitled")]
+    [InlineData("CON", "_CON")]
+    [InlineData("v1..2", "v1.2")]
+    [InlineData("\u00A0Tube caps", "\u00A0Tube caps")] // a leading no-break space is kept; the old code trimmed it
+    [InlineData("Fin\u0085clips", "Fin-clips")]
+    public void Titles_outside_the_boundary_get_a_new_name(string title, string expected)
+    {
+        string result = SafeFileName.Clean(title, SafeFileName.MaxTitleLength);
+
+        Assert.NotEqual(OldWindowsName(title), result);
+        Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void A_title_over_60_chars_gets_a_new_name()
+    {
+        string title = new('a', 61);
+
+        Assert.Equal(new string('a', 60), SafeFileName.Clean(title, SafeFileName.MaxTitleLength));
+        Assert.Equal(title, OldWindowsName(title));
+    }
+}
