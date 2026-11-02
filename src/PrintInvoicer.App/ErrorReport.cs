@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
+using PrintInvoicer.Core.Files;
 
 namespace PrintInvoicer.App;
 
@@ -57,7 +58,7 @@ public static class ErrorReport
                 // AUDIT: opens a program. Only if the user clicks Yes: the GitHub issue page in their browser, and Explorer with
                 // the details file selected, so they can attach it themselves.
                 Process.Start(new ProcessStartInfo(IssuesPage) { UseShellExecute = true });
-                if (path is not null) Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{path}\"") { UseShellExecute = true });
+                if (path is not null) Process.Start(ShellCommands.ShowFile(path));
             }
             catch (Exception openError) when (openError is System.ComponentModel.Win32Exception or InvalidOperationException)
             {

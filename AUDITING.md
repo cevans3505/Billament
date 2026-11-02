@@ -34,7 +34,9 @@ no update information. There is no telemetry, analytics or crash upload. Error d
 ## Programs started
 
 All of these use Windows' "open this with its default program" (`Process.Start` with `UseShellExecute`). Each one happens
-only in response to a click.
+only in response to a click. Explorer is given the folder or file as a separate argument
+(`ProcessStartInfo.ArgumentList`, built by `ShellCommands` in Core), never pasted into a command line, so a path with a
+quote or a space stays one argument.
 
 | What opens | Where | Triggered by |
 | --- | --- | --- |

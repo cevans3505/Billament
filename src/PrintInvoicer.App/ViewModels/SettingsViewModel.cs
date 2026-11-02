@@ -4,6 +4,7 @@ using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PrintInvoicer.Core.Data;
+using PrintInvoicer.Core.Files;
 using PrintInvoicer.Core.Models;
 
 namespace PrintInvoicer.App.ViewModels;
@@ -183,7 +184,7 @@ public partial class SettingsViewModel : ObservableObject
     {
         try
         {
-            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{path}\"") { UseShellExecute = true });
+            Process.Start(ShellCommands.ShowFolder(path));
         }
         catch (Exception ex)
         {
